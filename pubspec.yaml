@@ -11,6 +11,20 @@ dependencies:
   flutter:
     sdk: flutter
 
+    # Supabase (Database + Auth)
+  supabase_flutter: ^2.3.0
+  # State Management (MVVM)
+  provider: ^6.1.1
+  # API calls (Claude)
+  http: ^1.1.0
+  # Secure API key storage
+  flutter_dotenv: ^5.1.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
