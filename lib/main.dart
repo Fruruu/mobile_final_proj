@@ -3,7 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view_models/auth_view_model.dart';
+import 'view_models/checkin_view_model.dart';
 import 'views/auth/login_screen.dart';
+import 'views/checkin/checkin_screen.dart';
 import 'views/home_screen.dart';
 
 void main() async {
@@ -18,6 +20,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => CheckinViewModel()),
       ],
       child: const MyApp(),
     ),
@@ -40,6 +43,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (_) => const LoginScreen(),
         '/home':  (_) => const HomeScreen(),
+        '/checkin': (_) => const CheckinScreen(),
       },
     );
   }
