@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: Colors.deepPurple,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Go to Daily Check-in'),
+          child: const Text('Daily Habit Check-in'),
         ),
       ),
     );
