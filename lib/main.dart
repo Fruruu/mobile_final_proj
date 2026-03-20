@@ -7,6 +7,7 @@ import 'view_models/checkin_view_model.dart';
 import 'views/auth/login_screen.dart';
 import 'views/checkin/checkin_screen.dart';
 import 'views/home_screen.dart';
+import 'view_models/journal_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => CheckinViewModel()),
+        ChangeNotifierProvider(create: (_) => JournalViewModel()),
       ],
       child: const MyApp(),
     ),
