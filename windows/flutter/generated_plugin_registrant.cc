@@ -10,8 +10,8 @@
 #include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  AppLinksPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
-  UrlLauncherWindowsRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
+    AppLinksPluginCApiRegisterWithRegistrar(
+        registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
+    UrlLauncherWindowsRegisterWithRegistrar(
+        registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }

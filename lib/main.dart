@@ -7,6 +7,7 @@ import 'view_models/checkin_view_model.dart';
 import 'views/auth/login_screen.dart';
 import 'views/checkin/checkin_screen.dart';
 import 'views/home_screen.dart';
+import 'views/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginScreen(),
         '/home':  (_) => const HomeScreen(),
         '/checkin': (_) => const CheckinScreen(),
+        '/settings': (_) => const SettingsScreen(),
       },
     );
   }
