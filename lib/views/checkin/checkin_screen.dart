@@ -115,7 +115,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
               children: [
                 Switch(
                   value: vm.exercised,
-                  activeColor: Colors.deepPurple,
+                  activeThumbColor: Colors.deepPurple,
                   onChanged: (value) => vm.setExercised(value),
                 ),
                 Text(

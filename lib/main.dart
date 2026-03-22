@@ -4,10 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/checkin_view_model.dart';
-import 'views/auth/login_screen.dart';
-import 'views/checkin/checkin_screen.dart';
-import 'views/home_screen.dart';
 import 'view_models/journal_view_model.dart';
+import 'views/auth/login_screen.dart';
+import 'views/home_screen.dart';
+import 'views/checkin/checkin_screen.dart';
+import 'views/journal/journal_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,9 +44,10 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (_) => const LoginScreen(),
-        '/home':  (_) => const HomeScreen(),
+        '/login':   (_) => const LoginScreen(),
+        '/home':    (_) => const HomeScreen(),
         '/checkin': (_) => const CheckinScreen(),
+        '/journal': (_) => const JournalScreen(),
       },
     );
   }
