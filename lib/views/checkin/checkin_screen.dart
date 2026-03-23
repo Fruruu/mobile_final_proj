@@ -23,10 +23,14 @@ class _CheckinScreenState extends State<CheckinScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.deepPurple : Colors.grey.shade100,
+          color: isSelected
+              ? Colors.deepPurple
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
+            color: isSelected
+                ? Colors.deepPurple
+                : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -116,7 +120,8 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 Switch(
                   value: vm.exercised,
                   activeThumbColor: Colors.deepPurple,
-                  onChanged: (value) => vm.setExercised(value),
+                  onChanged: (value) =>
+                      vm.setExercised(value),
                 ),
                 Text(
                   vm.exercised ? 'Yes! 💪' : 'No',
@@ -141,10 +146,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 IconButton(
                   onPressed: () {
                     if (vm.waterGlasses > 0) {
-                      vm.setWaterGlasses(vm.waterGlasses - 1);
+                      vm.setWaterGlasses(
+                          vm.waterGlasses - 1);
                     }
                   },
-                  icon: const Icon(Icons.remove_circle_outline),
+                  icon: const Icon(
+                      Icons.remove_circle_outline),
                   color: Colors.deepPurple,
                   iconSize: 32,
                 ),
@@ -154,9 +161,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
                 ),
                 IconButton(
                   onPressed: () {
-                    vm.setWaterGlasses(vm.waterGlasses + 1);
+                    vm.setWaterGlasses(
+                        vm.waterGlasses + 1);
                   },
-                  icon: const Icon(Icons.add_circle_outline),
+                  icon: const Icon(
+                      Icons.add_circle_outline),
                   color: Colors.deepPurple,
                   iconSize: 32,
                 ),
@@ -166,24 +175,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
             // ERROR MESSAGE
             if (vm.errorMessage.isNotEmpty)
-              Text(
-                vm.errorMessage,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 13,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  vm.errorMessage,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-
-            // SUCCESS MESSAGE
-            if (vm.success)
-              const Text(
-                'Check-in saved successfully! ✅',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 13,
-                ),
-              ),
-            const SizedBox(height: 16),
 
             // SUBMIT BUTTON
             ElevatedButton(
@@ -191,19 +192,95 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   ? null
                   : () async {
                       if (user != null) {
-                        await vm.submitCheckin(user.id);
+                        // Check if today's check-in already exists
+                        final exists = await vm
+                            .todayCheckinExists(user.id);
+
+                        if (exists && context.mounted) {
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text(
+                                'Update Check-in?',
+                              ),
+                              content: const Text(
+                                'You already checked in today. '
+                                'Would you like to update it?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    await vm.submitCheckin(
+                                        user.id);
+                                    if (vm.success &&
+                                        context
+                                            .mounted) {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/insight',
+                                        arguments: {
+                                          'aiMood':
+                                              vm.aiMood,
+                                          'aiInsight': vm
+                                              .aiInsight,
+                                          'source':
+                                              'checkin',
+                                        },
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton
+                                      .styleFrom(
+                                    backgroundColor:
+                                        Colors.deepPurple,
+                                    foregroundColor:
+                                        Colors.white,
+                                  ),
+                                  child:
+                                      const Text('Update'),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else if (!exists &&
+                            context.mounted) {
+                          // No existing check-in, proceed normally
+                          await vm.submitCheckin(user.id);
+                          if (vm.success &&
+                              context.mounted) {
+                            Navigator.pushNamed(
+                              context,
+                              '/insight',
+                              arguments: {
+                                'aiMood': vm.aiMood,
+                                'aiInsight':
+                                    vm.aiInsight,
+                                'source': 'checkin',
+                              },
+                            );
+                          }
+                        }
                       }
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: vm.isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const CircularProgressIndicator(
+                      color: Colors.white)
                   : const Text(
                       'Save Check-in',
                       style: TextStyle(fontSize: 16),

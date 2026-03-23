@@ -6,6 +6,8 @@ class DailyCheckin {
   final double? sleepHours;
   final bool exercised;
   final int? waterGlasses;
+  final String? aiMood;
+  final String? aiInsight;
   final String? createdAt;
 
   DailyCheckin({
@@ -16,24 +18,32 @@ class DailyCheckin {
     this.sleepHours,
     this.exercised = false,
     this.waterGlasses,
+    this.aiMood,
+    this.aiInsight,
     this.createdAt,
   });
 
-  // Convert Supabase response to DailyCheckin object
   factory DailyCheckin.fromJson(Map<String, dynamic> json) {
     return DailyCheckin(
-      id: json['id'],
-      userId: json['user_id'],
+      id: json['id']?.toString(),
+      userId: json['user_id']?.toString() ?? '',
       date: DateTime.parse(json['date']),
-      userMood: json['user_mood'],
-      sleepHours: json['sleep_hours']?.toDouble(),
+      userMood: json['user_mood'] != null
+          ? int.parse(json['user_mood'].toString())
+          : null,
+      sleepHours: json['sleep_hours'] != null
+          ? double.parse(json['sleep_hours'].toString())
+          : null,
       exercised: json['exercised'] ?? false,
-      waterGlasses: json['water_glasses'],
-      createdAt: json['created_at'],
+      waterGlasses: json['water_glasses'] != null
+          ? int.parse(json['water_glasses'].toString())
+          : null,
+      aiMood: json['ai_mood']?.toString(),
+      aiInsight: json['ai_insight']?.toString(),
+      createdAt: json['created_at']?.toString(),
     );
   }
 
-  // Convert DailyCheckin object to Map for Supabase
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
@@ -42,6 +52,8 @@ class DailyCheckin {
       'sleep_hours': sleepHours,
       'exercised': exercised,
       'water_glasses': waterGlasses,
+      if (aiMood != null) 'ai_mood': aiMood,
+      if (aiInsight != null) 'ai_insight': aiInsight,
     };
   }
 }
