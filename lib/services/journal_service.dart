@@ -4,11 +4,32 @@ import '../models/journal_entry.dart';
 class JournalService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // CREATE
+  // CREATE OR UPDATE (upsert)
   Future<void> insertJournal(JournalEntry entry) async {
-    await _supabase
+    final today = DateTime.now()
+        .toIso8601String()
+        .split('T')[0];
+
+    // Check if journal entry already exists for today
+    final existing = await _supabase
         .from('journal_entries')
-        .insert(entry.toJson());
+        .select()
+        .eq('user_id', entry.userId)
+        .eq('date', today)
+        .maybeSingle();
+
+    if (existing != null) {
+      // Update existing journal entry
+      await _supabase
+          .from('journal_entries')
+          .update(entry.toJson())
+          .eq('id', existing['id']);
+    } else {
+      // Insert new journal entry
+      await _supabase
+          .from('journal_entries')
+          .insert(entry.toJson());
+    }
   }
 
   // READ ALL

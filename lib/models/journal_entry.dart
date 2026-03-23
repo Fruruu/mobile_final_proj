@@ -20,24 +20,23 @@ class JournalEntry {
   // Convert Supabase response to JournalEntry object
   factory JournalEntry.fromJson(Map<String, dynamic> json) {
     return JournalEntry(
-      id: json['id'],
-      userId: json['user_id'],
+      id: json['id']?.toString(),
+      userId: json['user_id']?.toString() ?? '',
       date: DateTime.parse(json['date']),
-      journalText: json['journal_text'],
-      aiMood: json['ai_mood'],
-      aiInsight: json['ai_insight'],
-      createdAt: json['created_at'],
+      journalText: json['journal_text']?.toString(),
+      aiMood: json['ai_mood']?.toString(),
+      aiInsight: json['ai_insight']?.toString(),
+      createdAt: json['created_at']?.toString(),
     );
   }
-
   // Convert JournalEntry object to Map for Supabase
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
       'date': date.toIso8601String().split('T')[0],
       'journal_text': journalText,
-      'ai_mood': aiMood,
-      'ai_insight': aiInsight,
+      if (aiMood != null) 'ai_mood': aiMood,
+      if (aiInsight != null) 'ai_insight': aiInsight,
     };
   }
 }

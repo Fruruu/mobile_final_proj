@@ -69,10 +69,14 @@ class _JournalScreenState extends State<JournalScreen> {
             TextField(
               controller: _journalController,
               maxLines: 10,
-              onChanged: (value) => vm.setJournalText(value),
+              onChanged: (value) {
+                vm.setJournalText(value);
+                setState(() {});
+              },
               decoration: InputDecoration(
                 hintText: 'Start writing here...',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintStyle:
+                    const TextStyle(color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -86,7 +90,7 @@ class _JournalScreenState extends State<JournalScreen> {
                 contentPadding: const EdgeInsets.all(16),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
             // CHARACTER COUNT
             Text(
@@ -112,64 +116,105 @@ class _JournalScreenState extends State<JournalScreen> {
                 ),
               ),
 
-            // SUCCESS MESSAGE
-            if (vm.success)
-              Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.deepPurple.shade200,
-                  ),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '✅ Journal saved!',
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'AI analysis will appear here soon.',
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
             // SUBMIT BUTTON
             ElevatedButton(
-              onPressed: vm.isLoading || _journalController.text.isEmpty
+              onPressed: vm.isLoading ||
+                      _journalController.text.isEmpty
                   ? null
                   : () async {
                       if (user != null) {
-                        await vm.submitJournal(user.id);
-                        if (vm.success) {
-                          _journalController.clear();
-                          setState(() {});
+                        // Check if today's journal entry already exists
+                        final exists = await vm
+                            .todayJournalExists(user.id);
+
+                        if (exists && context.mounted) {
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text(
+                                'Update Journal Entry?',
+                              ),
+                              content: const Text(
+                                'You already wrote a journal entry today. '
+                                'Would you like to update it?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    await vm.submitJournal(
+                                        user.id);
+                                    if (vm.success &&
+                                        context
+                                            .mounted) {
+                                      _journalController
+                                          .clear();
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/insight',
+                                        arguments: {
+                                          'aiMood':
+                                              vm.aiMood,
+                                          'aiInsight': vm
+                                              .aiInsight,
+                                          'source':
+                                              'journal',
+                                        },
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton
+                                      .styleFrom(
+                                    backgroundColor:
+                                        Colors.deepPurple,
+                                    foregroundColor:
+                                        Colors.white,
+                                  ),
+                                  child:
+                                      const Text('Update'),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else if (!exists &&
+                            context.mounted) {
+                          // No existing entry, proceed normally
+                          await vm.submitJournal(user.id);
+                          if (vm.success &&
+                              context.mounted) {
+                            _journalController.clear();
+                            Navigator.pushNamed(
+                              context,
+                              '/insight',
+                              arguments: {
+                                'aiMood': vm.aiMood,
+                                'aiInsight':
+                                    vm.aiInsight,
+                                'source': 'journal',
+                              },
+                            );
+                          }
                         }
                       }
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: vm.isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const CircularProgressIndicator(
+                      color: Colors.white)
                   : const Text(
                       'Save Journal Entry',
                       style: TextStyle(fontSize: 16),
