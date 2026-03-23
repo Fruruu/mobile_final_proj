@@ -4,14 +4,35 @@ import '../models/daily_checkin.dart';
 class DatabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // CREATE
+  // CREATE OR UPDATE (upsert)
   Future<void> insertCheckin(DailyCheckin checkin) async {
-    await _supabase
+    final today = DateTime.now()
+        .toIso8601String()
+        .split('T')[0];
+
+    // Check if check-in already exists for today
+    final existing = await _supabase
         .from('daily_checkins')
-        .insert(checkin.toJson());
+        .select()
+        .eq('user_id', checkin.userId)
+        .eq('date', today)
+        .maybeSingle();
+
+    if (existing != null) {
+      // Update existing check-in
+      await _supabase
+          .from('daily_checkins')
+          .update(checkin.toJson())
+          .eq('id', existing['id']);
+    } else {
+      // Insert new check-in
+      await _supabase
+          .from('daily_checkins')
+          .insert(checkin.toJson());
+    }
   }
 
-  // READ
+  // READ ALL
   Future<List<DailyCheckin>> getCheckins(String userId) async {
     final data = await _supabase
         .from('daily_checkins')
@@ -22,8 +43,26 @@ class DatabaseService {
     return data.map((e) => DailyCheckin.fromJson(e)).toList();
   }
 
-  // READ LAST 7 DAYS (for RAG later)
-  Future<List<DailyCheckin>> getLastSevenDays(String userId) async {
+  // READ TODAY'S CHECK-IN
+  Future<DailyCheckin?> getTodayCheckin(String userId) async {
+    final today = DateTime.now()
+        .toIso8601String()
+        .split('T')[0];
+
+    final data = await _supabase
+        .from('daily_checkins')
+        .select()
+        .eq('user_id', userId)
+        .eq('date', today)
+        .maybeSingle();
+
+    if (data == null) return null;
+    return DailyCheckin.fromJson(data);
+  }
+
+  // READ LAST 7 DAYS
+  Future<List<DailyCheckin>> getLastSevenDays(
+      String userId) async {
     final sevenDaysAgo = DateTime.now()
         .subtract(const Duration(days: 7))
         .toIso8601String()
@@ -39,12 +78,45 @@ class DatabaseService {
     return data.map((e) => DailyCheckin.fromJson(e)).toList();
   }
 
+  // READ LAST 30 DAYS
+  Future<List<DailyCheckin>> getLastThirtyDays(
+      String userId) async {
+    final thirtyDaysAgo = DateTime.now()
+        .subtract(const Duration(days: 30))
+        .toIso8601String()
+        .split('T')[0];
+
+    final data = await _supabase
+        .from('daily_checkins')
+        .select()
+        .eq('user_id', userId)
+        .gte('date', thirtyDaysAgo)
+        .order('date', ascending: true);
+
+    return data.map((e) => DailyCheckin.fromJson(e)).toList();
+  }
+
   // UPDATE
   Future<void> updateCheckin(DailyCheckin checkin) async {
     await _supabase
         .from('daily_checkins')
         .update(checkin.toJson())
         .eq('id', checkin.id!);
+  }
+
+  // UPDATE AI RESULTS
+  Future<void> updateCheckinAiResults(
+    String id,
+    String aiMood,
+    String aiInsight,
+  ) async {
+    await _supabase
+        .from('daily_checkins')
+        .update({
+          'ai_mood': aiMood,
+          'ai_insight': aiInsight,
+        })
+        .eq('id', id);
   }
 
   // DELETE
