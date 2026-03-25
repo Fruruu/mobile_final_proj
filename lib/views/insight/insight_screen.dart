@@ -11,6 +11,12 @@ class InsightScreen extends StatefulWidget {
 }
 
 class _InsightScreenState extends State<InsightScreen> {
+  static const Color _bg = Color(0xFFF6F6F6);
+  static const Color _primary = Color(0xFF75525B);
+  static const Color _primarySoft = Color(0xFFFFD1DC);
+  static const Color _text = Color(0xFF2D2F2F);
+  static const Color _muted = Color(0xFF5A5C5C);
+
   late String _aiMood;
   late String _aiInsight;
   late String _source;
@@ -47,117 +53,154 @@ class _InsightScreenState extends State<InsightScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<InsightViewModel>(context);
-    final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Your Insights'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/home',
-            (route) => false,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Your Insights',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: _primary,
           ),
         ),
+        backgroundColor: _bg,
+        foregroundColor: _primary,
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: Stack(
+        children: [
+          Positioned(
+            top: 40,
+            left: -80,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x22FFD1DC),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 120,
+            right: -60,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x22B2E4FB),
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             // MOOD DETECTED SECTION
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.deepPurple.shade200,
+                borderRadius: BorderRadius.circular(28),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _primary.withOpacity(0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: _primarySoft,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'MOOD DETECTED',
+                      style: TextStyle(
+                        color: _primary,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   Text(
                     _getMoodEmoji(),
-                    style: const TextStyle(fontSize: 80),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Detected Mood',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: const TextStyle(fontSize: 70),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _aiMood.isNotEmpty ? _aiMood : 'Analyzing...',
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: _text,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 22),
 
             // AI INSIGHT SECTION
-            Text(
+            const Text(
               'AI Insight',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: _text,
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                ),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFD8DADA)),
               ),
               child: Text(
                 _aiInsight.isNotEmpty ? _aiInsight : 'Loading insight...',
                 style: const TextStyle(
                   fontSize: 15,
                   height: 1.6,
-                  color: Colors.black87,
+                  color: _text,
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 22),
 
             // TODAY'S CHECK-IN SUMMARY
             if (vm.todayCheckin != null) ...[
-              Text(
+              const Text(
                 "Today's Summary",
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: _text,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.blue.shade200,
-                  ),
+                  color: const Color(0xFFE7F6FD),
+                  borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,13 +227,13 @@ class _InsightScreenState extends State<InsightScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 22),
             ] else if (vm.isLoading)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Center(
                   child: CircularProgressIndicator(
-                    color: Colors.deepPurple,
+                    color: _primary,
                   ),
                 ),
               )
@@ -208,34 +251,31 @@ class _InsightScreenState extends State<InsightScreen> {
 
             // JOURNAL TEXT (if source is journal)
             if (_source == 'journal') ...[
-              Text(
+              const Text(
                 'Your Journal Entry',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: _text,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.amber.shade200,
-                  ),
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Text(
+                child: const Text(
                   'Journal entry saved and analyzed',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.amber.shade900,
+                    color: Color(0xFF854D0E),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 22),
             ],
 
             // ACTION BUTTONS
@@ -246,11 +286,12 @@ class _InsightScreenState extends State<InsightScreen> {
                 (route) => false,
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                elevation: 0,
+                backgroundColor: _primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
               child: const Text(
@@ -267,11 +308,11 @@ class _InsightScreenState extends State<InsightScreen> {
                 Navigator.pushNamed(context, '/history');
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.deepPurple,
-                side: const BorderSide(color: Colors.deepPurple),
+                foregroundColor: _primary,
+                side: const BorderSide(color: _primary),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
               child: const Text(
@@ -283,9 +324,11 @@ class _InsightScreenState extends State<InsightScreen> {
               ),
             ),
             const SizedBox(height: 24),
-          ],
+              ],
+            ),
+          ),
+        ],
         ),
-      ),
     );
   }
 
@@ -297,8 +340,8 @@ class _InsightScreenState extends State<InsightScreen> {
           label,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            color: _text,
           ),
         ),
         Text(
@@ -306,7 +349,7 @@ class _InsightScreenState extends State<InsightScreen> {
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
+            color: _primary,
           ),
         ),
       ],

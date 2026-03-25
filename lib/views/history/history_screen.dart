@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../view_models/history_view_model.dart';
 import '../../models/daily_checkin.dart';
 import '../../models/journal_entry.dart';
+import '../../widgets/app_bottom_nav.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -14,6 +15,9 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   bool _initialized = false;
+
+  static const Color _bg = Color(0xFFF6F6F6);
+  static const Color _primary = Color(0xFF75525B);
 
   @override
   void didChangeDependencies() {
@@ -36,79 +40,71 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Activity History'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Activity History',
+          style: TextStyle(fontWeight: FontWeight.w700, color: _primary),
+        ),
+        backgroundColor: _bg,
+        foregroundColor: _primary,
+        elevation: 0,
       ),
       body: vm.isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: Colors.deepPurple,
-              ),
+              child: CircularProgressIndicator(color: Colors.deepPurple),
             )
           : vm.errorMessage.isNotEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Text(
-                      vm.errorMessage,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text(
+                  vm.errorMessage,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : vm.checkins.isEmpty && vm.journals.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'No activity yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700,
                     ),
                   ),
-                )
-              : vm.checkins.isEmpty && vm.journals.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'No activity yet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Start tracking your mood and journaling!',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16.0),
-                      itemCount: vm.getCombinedTimeline().length,
-                      itemBuilder: (context, index) {
-                        final item = vm.getCombinedTimeline()[index];
-                        if (item is DailyCheckin) {
-                          return _buildCheckinCard(
-                            context,
-                            item,
-                            vm,
-                            user?.id ?? '',
-                          );
-                        } else {
-                          return _buildJournalCard(
-                            context,
-                            item as JournalEntry,
-                            vm,
-                            user?.id ?? '',
-                          );
-                        }
-                      },
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start tracking your mood and journaling!',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: vm.getCombinedTimeline().length,
+              itemBuilder: (context, index) {
+                final item = vm.getCombinedTimeline()[index];
+                if (item is DailyCheckin) {
+                  return _buildCheckinCard(context, item, vm, user?.id ?? '');
+                } else {
+                  return _buildJournalCard(
+                    context,
+                    item as JournalEntry,
+                    vm,
+                    user?.id ?? '',
+                  );
+                }
+              },
+            ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 
@@ -126,8 +122,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           '/insight',
           arguments: {
             'aiMood': checkin.aiMood ?? 'No mood detected',
-            'aiInsight':
-                checkin.aiInsight ?? 'No insight available',
+            'aiInsight': checkin.aiInsight ?? 'No insight available',
             'source': 'history',
           },
         );
@@ -137,9 +132,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.grey.shade300,
-          ),
+          border: Border.all(color: Colors.grey.shade300),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -188,8 +181,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
               // Details row (sleep, exercise, water)
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildDetailItem(
                     '😴 Sleep',
@@ -208,8 +200,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(height: 16),
 
               // AI Insight preview
-              if (checkin.aiInsight != null &&
-                  checkin.aiInsight.isNotEmpty)
+              if (checkin.aiInsight != null && checkin.aiInsight.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -252,12 +243,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    _showDeleteConfirmation(
-                      context,
-                      checkin.id,
-                      vm,
-                      userId,
-                    );
+                    _showDeleteConfirmation(context, checkin.id, vm, userId);
                   },
                   icon: const Icon(Icons.delete_outline),
                   label: const Text('Delete'),
@@ -280,10 +266,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
         ),
         const SizedBox(height: 4),
         Text(
@@ -312,8 +295,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           '/insight',
           arguments: {
             'aiMood': journal.aiMood ?? 'No mood detected',
-            'aiInsight':
-                journal.aiInsight ?? 'No insight available',
+            'aiInsight': journal.aiInsight ?? 'No insight available',
             'source': 'history',
           },
         );
@@ -323,9 +305,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.amber.shade300,
-          ),
+          border: Border.all(color: Colors.amber.shade300),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -365,10 +345,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ],
                   ),
-                  Text(
-                    '📓',
-                    style: const TextStyle(fontSize: 40),
-                  ),
+                  Text('📓', style: const TextStyle(fontSize: 40)),
                 ],
               ),
               const SizedBox(height: 12),
@@ -413,8 +390,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(height: 12),
 
               // AI Insight preview
-              if (journal.aiInsight != null &&
-                  journal.aiInsight!.isNotEmpty)
+              if (journal.aiInsight != null && journal.aiInsight!.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

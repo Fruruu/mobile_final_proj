@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/report_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/app_bottom_nav.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -11,6 +12,12 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
+  static const Color _bg = Color(0xFFF6F6F6);
+  static const Color _primary = Color(0xFF75525B);
+  static const Color _primarySoft = Color(0xFFFFD1DC);
+  static const Color _text = Color(0xFF2D2F2F);
+  static const Color _muted = Color(0xFF5A5C5C);
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -25,19 +32,21 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: _bg,
       appBar: AppBar(
-        title: const Text('Reports & Analytics'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Reports & Analytics',
+          style: TextStyle(fontWeight: FontWeight.w700, color: _primary),
+        ),
+        backgroundColor: _bg,
+        foregroundColor: _primary,
         elevation: 0,
       ),
       body: Consumer<ReportViewModel>(
         builder: (context, viewModel, _) {
           if (viewModel.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (viewModel.errorMessage.isNotEmpty) {
@@ -78,6 +87,7 @@ class _ReportScreenState extends State<ReportScreen> {
           );
         },
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
     );
   }
 
@@ -98,7 +108,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: viewModel.selectedView == 'weekly'
-                      ? Colors.deepPurple
+                      ? _primary
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -123,7 +133,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: viewModel.selectedView == 'monthly'
-                      ? Colors.deepPurple
+                      ? _primary
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -146,94 +156,130 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Widget _buildStatsCards(ReportViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Key Metrics',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _primary.withOpacity(0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
-        ),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _buildStatCard(
-              '😊 Mood',
-              viewModel.averageMood.toStringAsFixed(1),
-              '/5',
-              Colors.amber,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: _primarySoft,
+              borderRadius: BorderRadius.circular(999),
             ),
-            _buildStatCard(
-              '😴 Sleep',
-              viewModel.averageSleep.toStringAsFixed(1),
-              'hrs',
-              Colors.blue,
+            child: const Text(
+              'KEY METRICS',
+              style: TextStyle(
+                color: _primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+                fontSize: 11,
+              ),
             ),
-            _buildStatCard(
-              '🏃 Exercise',
-              viewModel.exerciseCount.toString(),
-              'days',
-              Colors.green,
-            ),
-            _buildStatCard(
-              '💧 Water',
-              viewModel.averageWater.toStringAsFixed(1),
-              'glasses',
-              Colors.cyan,
-            ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: 14),
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1,
+            children: [
+              _buildStatCard(
+                '😊 Mood',
+                viewModel.averageMood.toStringAsFixed(1),
+                '/5',
+                const Color(0xFFE7F6FD),
+              ),
+              _buildStatCard(
+                '😴 Sleep',
+                viewModel.averageSleep.toStringAsFixed(1),
+                'hrs',
+                const Color(0xFFEFF0FF),
+              ),
+              _buildStatCard(
+                '🏃 Exercise',
+                viewModel.exerciseCount.toString(),
+                'days',
+                const Color(0xFFFEEFCF),
+              ),
+              _buildStatCard(
+                '💧 Water',
+                viewModel.averageWater.toStringAsFixed(1),
+                'glasses',
+                const Color(0xFFDDF1FF),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, String unit, Color color) {
+  Widget _buildStatCard(String label, String value, String unit, Color bg) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label.split(' ').first,
+              style: const TextStyle(fontSize: 18),
             ),
           ),
           const SizedBox(height: 8),
+          Text(
+            label.split(' ').skip(1).join(' '),
+            style: const TextStyle(
+              fontSize: 12,
+              color: _muted,
+            ),
+          ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: _text,
                 ),
               ),
               const SizedBox(width: 4),
               Text(
                 unit,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: const TextStyle(fontSize: 12, color: _muted),
               ),
             ],
           ),
@@ -243,18 +289,19 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Widget _buildCorrelationSection(ReportViewModel viewModel) {
-    final exerciseDiff = (viewModel.moodWithExercise - viewModel.moodWithoutExercise).toStringAsFixed(1);
-    final sleepDiff = (viewModel.moodWithGoodSleep - viewModel.moodWithPoorSleep).toStringAsFixed(1);
+    final exerciseDiff =
+        (viewModel.moodWithExercise - viewModel.moodWithoutExercise)
+            .toStringAsFixed(1);
+    final sleepDiff =
+        (viewModel.moodWithGoodSleep - viewModel.moodWithPoorSleep)
+            .toStringAsFixed(1);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Habit-Mood Correlation',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         _buildCorrelationCard(
@@ -289,7 +336,9 @@ class _ReportScreenState extends State<ReportScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: positive ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+          color: positive
+              ? Colors.green.withOpacity(0.3)
+              : Colors.orange.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -298,26 +347,17 @@ class _ReportScreenState extends State<ReportScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             line1,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 4),
           Text(
             line2,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 8),
           Container(
@@ -333,7 +373,9 @@ class _ReportScreenState extends State<ReportScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: positive ? Colors.green.shade700 : Colors.orange.shade700,
+                color: positive
+                    ? Colors.green.shade700
+                    : Colors.orange.shade700,
               ),
             ),
           ),
@@ -347,7 +389,7 @@ class _ReportScreenState extends State<ReportScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade600],
+          colors: [_primary.withOpacity(0.82), _primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -389,10 +431,7 @@ class _ReportScreenState extends State<ReportScreen> {
       children: [
         const Text(
           'Mood Distribution',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Container(
@@ -404,57 +443,53 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: moodFreq.entries
-                .toList()
-                .reversed
-                .map((entry) {
-                  final mood = entry.key;
-                  final count = entry.value;
-                  final percentage = (count / viewModel.checkins.length * 100);
-                  final moodEmoji = viewModel.getMoodEmoji(mood);
-                  final moodLabel = _getMoodLabel(mood);
+            children: moodFreq.entries.toList().reversed.map((entry) {
+              final mood = entry.key;
+              final count = entry.value;
+              final percentage = (count / viewModel.checkins.length * 100);
+              final moodEmoji = viewModel.getMoodEmoji(mood);
+              final moodLabel = _getMoodLabel(mood);
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '$moodEmoji $moodLabel',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '${percentage.toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          '$moodEmoji $moodLabel',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: percentage / 100,
-                            minHeight: 8,
-                            backgroundColor: Colors.grey.shade200,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _getMoodColor(mood),
-                            ),
+                        Text(
+                          '${percentage.toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
-                  );
-                })
-                .toList(),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getMoodColor(mood),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],

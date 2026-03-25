@@ -44,6 +44,45 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  Route<dynamic> _buildRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/login':
+        return MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+          settings: settings,
+        );
+      case '/home':
+        return _noTransitionRoute(const HomeScreen(), settings);
+      case '/checkin':
+        return _noTransitionRoute(const CheckinScreen(), settings);
+      case '/journal':
+        return _noTransitionRoute(const JournalScreen(), settings);
+      case '/history':
+        return _noTransitionRoute(const HistoryScreen(), settings);
+      case '/report':
+        return _noTransitionRoute(const ReportScreen(), settings);
+      case '/insight':
+        return MaterialPageRoute(
+          builder: (_) => const InsightScreen(),
+          settings: settings,
+        );
+      default:
+        return MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+          settings: settings,
+        );
+    }
+  }
+
+  PageRouteBuilder _noTransitionRoute(Widget child, RouteSettings settings) {
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (_, __, ___) => child,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -54,15 +93,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       initialRoute: '/login',
-      routes: {
-        '/login':    (_) => const LoginScreen(),
-        '/home':     (_) => const HomeScreen(),
-        '/checkin':  (_) => const CheckinScreen(),
-        '/journal':  (_) => const JournalScreen(),
-        '/insight':  (_) => const InsightScreen(),
-        '/history':  (_) => const HistoryScreen(),
-        '/report':   (_) => const ReportScreen(),
-      },
+      onGenerateRoute: _buildRoute,
     );
   }
 }
