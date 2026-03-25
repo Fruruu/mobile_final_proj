@@ -44,6 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushNamed(context, '/journal');
         break;
       case 3:
+        Navigator.pushNamed(context, '/history');
+        break;
+      case 4:
         Navigator.pushNamed(context, '/report');
         break;
     }
@@ -52,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<HomeViewModel>(context);
-    final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -326,6 +328,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.edit_note),
             label: 'Journal',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'History',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),

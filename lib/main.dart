@@ -8,6 +8,7 @@ import 'view_models/journal_view_model.dart';
 import 'view_models/insight_view_model.dart';
 import 'view_models/history_view_model.dart';
 import 'view_models/home_view_model.dart';
+import 'view_models/report_view_model.dart';
 import 'views/auth/login_screen.dart';
 import 'views/home_screen.dart';
 import 'views/checkin/checkin_screen.dart';
@@ -33,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => InsightViewModel()),
         ChangeNotifierProvider(create: (_) => HistoryViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => ReportViewModel()),
       ],
       child: const MyApp(),
     ),

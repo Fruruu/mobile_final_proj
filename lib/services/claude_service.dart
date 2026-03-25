@@ -152,6 +152,40 @@ Water: ${checkin['water_glasses']} glasses
     return summary;
   }
 
+  // GENERATE INSIGHT WITH CUSTOM CONTEXT (for reports, analytics, etc.)
+  Future<String> generateWithContext(
+    String contextType,
+    String context,
+    dynamic data,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': _apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': 'claude-haiku-4-5-20251001',
+          'max_tokens': 300,
+          'temperature': 0.7,
+          'messages': [
+            {
+              'role': 'user',
+              'content': context,
+            }
+          ],
+        }),
+      );
+
+      final respData = jsonDecode(response.body);
+      return respData['content'][0]['text'] ?? 'No insight available.';
+    } catch (e) {
+      return 'Could not generate insight at this time.';
+    }
+  }
+
   // PARSE CLAUDE RESPONSE
   Map<String, String> _parseResponse(String text) {
     try {
