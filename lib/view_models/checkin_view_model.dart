@@ -72,7 +72,7 @@ class CheckinViewModel extends ChangeNotifier {
         exercised: _exercised,
         waterGlasses: _waterGlasses,
       );
-      await _db.insertCheckin(checkin);
+      final savedCheckinId = await _db.insertCheckin(checkin);
 
       // STEP 2 - Fetch last 7 days (RAG)
       final lastSevenDays = await _db
@@ -112,14 +112,22 @@ class CheckinViewModel extends ChangeNotifier {
       _aiMood = result['mood']!;
       _aiInsight = result['insight']!;
 
-      // Get the saved checkin and update it
-      final todayData = await _db.getTodayCheckin(userId);
-      if (todayData != null) {
+      // Update the exact saved row to avoid missing records due to date-matching issues.
+      if (savedCheckinId != null && savedCheckinId.isNotEmpty) {
         await _db.updateCheckinAiResults(
-          todayData.id!,
+          savedCheckinId,
           _aiMood,
           _aiInsight,
         );
+      } else {
+        final todayData = await _db.getTodayCheckin(userId);
+        if (todayData != null) {
+          await _db.updateCheckinAiResults(
+            todayData.id!,
+            _aiMood,
+            _aiInsight,
+          );
+        }
       }
 
       _success = true;

@@ -5,7 +5,7 @@ class DatabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // CREATE OR UPDATE (upsert)
-  Future<void> insertCheckin(DailyCheckin checkin) async {
+  Future<String?> insertCheckin(DailyCheckin checkin) async {
     final today = DateTime.now()
         .toIso8601String()
         .split('T')[0];
@@ -24,11 +24,15 @@ class DatabaseService {
           .from('daily_checkins')
           .update(checkin.toJson())
           .eq('id', existing['id']);
+      return existing['id']?.toString();
     } else {
       // Insert new check-in
-      await _supabase
+      final inserted = await _supabase
           .from('daily_checkins')
-          .insert(checkin.toJson());
+          .insert(checkin.toJson())
+          .select('id')
+          .single();
+      return inserted['id']?.toString();
     }
   }
 
