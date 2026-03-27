@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/auth_view_model.dart';
+import '../../theme/app_colors.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,11 +15,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  static const Color _bg = Color(0xFFF6F6F6);
-  static const Color _primary = Color(0xFF75525B);
-  static const Color _primaryDim = Color(0xFF684650);
-  static const Color _text = Color(0xFF2D2F2F);
-  static const Color _muted = Color(0xFF5A5C5C);
+  static const Color _bg = AppColors.white;
+  static const Color _primary = AppColors.primaryPink;
+  static const Color _primaryDim = AppColors.orange;
+  static const Color _text = AppColors.black;
+  static const Color _muted = AppColors.black;
 
   @override
   void dispose() {
@@ -79,7 +80,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const LinearGradient(
-                            colors: [_primary, Color(0xFFFFD1DC)],
+                            colors: [_primary, Color(0x66FF6169)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -170,7 +171,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     if (vm.errorMessage.isNotEmpty)
                       Text(
                         vm.errorMessage,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: const TextStyle(color: AppColors.red, fontSize: 13),
                       ),
                     const SizedBox(height: 14),
                     Container(
@@ -204,9 +205,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: Colors.transparent,
-                          foregroundColor: const Color(0xFFFFEFF1),
+                          foregroundColor: AppColors.white,
                           disabledBackgroundColor: Colors.transparent,
-                          disabledForegroundColor: const Color(0xFFFFEFF1),
+                          disabledForegroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(999),

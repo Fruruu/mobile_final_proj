@@ -1,102 +1,108 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({super.key, required this.currentIndex});
 
   final int currentIndex;
 
-  static const List<String> _routes = [
-    '/home',
-    '/checkin',
-    '/journal',
-    '/history',
-    '/report',
+  static const List<_NavItemData> _items = [
+    _NavItemData(label: 'Home', icon: Icons.home_rounded, route: '/home'),
+    _NavItemData(
+      label: 'Check-In',
+      icon: Icons.check_box_rounded,
+      route: '/checkin',
+    ),
+    _NavItemData(
+      label: 'Journal',
+      icon: Icons.edit_note,
+      route: '/journal',
+    ),
+    _NavItemData(
+      label: 'Entries',
+      icon: Icons.history_rounded,
+      route: '/history',
+    ),
+    _NavItemData(
+      label: 'Reports',
+      icon: Icons.bar_chart_rounded,
+      route: '/report',
+    ),
   ];
 
-  static const Color _primary = Color(0xFF75525B);
-  static const Color _activeBg = Color(0xFFFFD1DC);
+  static const Color _activeBg = AppColors.primaryPink;
+  static const Color _inactive = AppColors.primaryPink;
+  static const Color _shellShadow = Color(0x1A000000);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
         child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.92),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
               BoxShadow(
-                color: _primary.withOpacity(0.16),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
+                color: _shellShadow,
+                blurRadius: 14,
+                offset: Offset(0, 4),
               ),
             ],
           ),
-          child: BottomNavigationBar(
-            currentIndex: currentIndex,
-            onTap: (index) => _onTap(context, index),
-            type: BottomNavigationBarType.fixed,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            selectedItemColor: _primary,
-            unselectedItemColor: const Color(0xFF767777),
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            items: [
-              _buildItem(Icons.home, 'Home'),
-              _buildItem(Icons.check_circle_outline, 'Check-in'),
-              _buildItem(Icons.edit_note, 'Journal'),
-              _buildItem(Icons.history, 'History'),
-              _buildItem(Icons.bar_chart, 'Reports'),
-            ],
+          child: Row(
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final selected = index == currentIndex;
+
+              return Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => _onTap(context, index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected ? _activeBg : Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.icon,
+                          size: 21,
+                          color: selected ? AppColors.white : _inactive,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: selected ? AppColors.white : _inactive,
+                            fontSize: 12,
+                            fontWeight:
+                                selected ? FontWeight.w600 : FontWeight.w500,
+                            height: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ),
-    );
-  }
-
-  BottomNavigationBarItem _buildItem(IconData icon, String label) {
-    const iconSize = 20.0;
-    const labelStyle = TextStyle(
-      color: Color(0xFF767777),
-      fontWeight: FontWeight.w600,
-      fontSize: 10,
-    );
-
-    final verticalItem = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: iconSize),
-        const SizedBox(height: 2),
-        Text(label, style: labelStyle),
-      ],
-    );
-
-    return BottomNavigationBarItem(
-      icon: verticalItem,
-      activeIcon: DecoratedBox(
-        decoration: BoxDecoration(
-          color: _activeBg,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: IconTheme(
-            data: const IconThemeData(color: _primary, size: iconSize),
-            child: DefaultTextStyle.merge(
-              style: const TextStyle(
-                color: _primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
-              ),
-              child: verticalItem,
-            ),
-          ),
-        ),
-      ),
-      label: '',
     );
   }
 
@@ -105,6 +111,18 @@ class AppBottomNav extends StatelessWidget {
       return;
     }
 
-    Navigator.pushReplacementNamed(context, _routes[index]);
+    Navigator.pushReplacementNamed(context, _items[index].route);
   }
+}
+
+class _NavItemData {
+  const _NavItemData({
+    required this.label,
+    required this.icon,
+    required this.route,
+  });
+
+  final String label;
+  final IconData icon;
+  final String route;
 }

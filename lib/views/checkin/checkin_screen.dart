@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/checkin_view_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/frosted_app_bar.dart';
+import '../../theme/app_colors.dart';
 
 class CheckinScreen extends StatefulWidget {
   const CheckinScreen({super.key});
@@ -12,52 +16,152 @@ class CheckinScreen extends StatefulWidget {
 }
 
 class _CheckinScreenState extends State<CheckinScreen> {
-  static const Color _bg = Color(0xFFF6F6F6);
-  static const Color _primary = Color(0xFF75525B);
-  static const Color _muted = Color(0xFF5A5C5C);
+  static const Color _bg = AppColors.white;
+  static const Color _primary = AppColors.primaryPink;
+  static const Color _muted = AppColors.black;
+  PageController? _moodPageController;
 
-  Widget _moodButton(
-    CheckinViewModel vm,
-    int mood,
-    String emoji,
-    String label,
-    Color bg,
-  ) {
-    final isSelected = vm.selectedMood == mood;
-    return GestureDetector(
-      onTap: () => vm.setMood(mood),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFD1DC) : bg,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected ? _primary : Colors.white,
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+  PageController get _carouselController {
+    return _moodPageController ??=
+        PageController(viewportFraction: 0.43, initialPage: 2);
+  }
+
+  static const List<_MoodOption> _moodOptions = [
+    _MoodOption(
+      mood: 5,
+      label: 'Radiant',
+      asset: 'assets/logos/very-happy-face.svg',
+      cardColor: Color(0xFFC3FFA7),
+    ),
+    _MoodOption(
+      mood: 4,
+      label: 'Calm',
+      asset: 'assets/logos/happy-face.svg',
+      cardColor: Color(0xFF4EC1F5),
+    ),
+    _MoodOption(
+      mood: 3,
+      label: 'Steady',
+      asset: 'assets/logos/neutral-face.svg',
+      cardColor: Color(0xFFFF6169),
+    ),
+    _MoodOption(
+      mood: 2,
+      label: 'Heavy',
+      asset: 'assets/logos/sad-face.svg',
+      cardColor: Color(0xFFFFDE71),
+    ),
+    _MoodOption(
+      mood: 1,
+      label: 'Fragile',
+      asset: 'assets/logos/very-sad-face.svg',
+      cardColor: Color(0xFFFF9800),
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _moodPageController?.dispose();
+    super.dispose();
+  }
+
+  Widget _buildMoodCarousel(CheckinViewModel vm) {
+    final selectedIndex = _moodOptions.indexWhere(
+      (option) => option.mood == vm.selectedMood,
+    );
+
+    if (selectedIndex >= 0) {
+      final target = selectedIndex.toDouble();
+      final current = _carouselController.hasClients
+          ? (_carouselController.page ?? _carouselController.initialPage.toDouble())
+          : _carouselController.initialPage.toDouble();
+      if ((current - target).abs() > 0.01 && _carouselController.hasClients) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _carouselController.animateToPage(
+              selectedIndex,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    }
+
+    return SizedBox(
+      height: 188,
+      child: PageView.builder(
+        controller: _carouselController,
+        clipBehavior: Clip.none,
+        onPageChanged: (index) => vm.setMood(_moodOptions[index].mood),
+        itemCount: _moodOptions.length,
+        itemBuilder: (context, index) {
+          final option = _moodOptions[index];
+          final selected = option.mood == vm.selectedMood;
+
+          final card = AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              color: option.cardColor,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withOpacity(selected ? 0.14 : 0.08),
+                  blurRadius: selected ? 16 : 10,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(999),
+            child: Center(
+              child: SvgPicture.asset(
+                option.asset,
+                width: selected ? 98 : 72,
+                height: selected ? 98 : 72,
+                fit: BoxFit.contain,
               ),
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 24)),
             ),
-          ],
-        ),
+          );
+
+          return AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.symmetric(
+              horizontal: 4,
+              vertical: selected ? 0 : 22,
+            ),
+            child: GestureDetector(
+              onTap: () {
+                vm.setMood(option.mood);
+                _carouselController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: selected
+                  ? card
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: ShaderMask(
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (bounds) => const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          stops: [0.0, 0.18, 0.82, 1.0],
+                          colors: [
+                            Colors.transparent,
+                            Colors.white,
+                            Colors.white,
+                            Colors.transparent,
+                          ],
+                        ).createShader(bounds),
+                        child: card,
+                      ),
+                    ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -69,89 +173,77 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Daily Check-in',
-          style: TextStyle(fontWeight: FontWeight.w700, color: _primary),
-        ),
-        backgroundColor: _bg,
-        foregroundColor: _primary,
-        elevation: 0,
-      ),
+      extendBodyBehindAppBar: true,
+      appBar: const FrostedAppBar(title: 'Daily Check-in'),
       body: Stack(
         children: [
           Positioned(
-            top: 40,
-            left: -70,
+            top: -110,
+            left: -90,
+            right: -90,
             child: Container(
-              width: 220,
-              height: 220,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x22FFD1DC),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            right: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x22DDFCDE),
+              height: 580,
+              decoration: BoxDecoration(
+                color: AppColors.yellow.withOpacity(0.7),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.elliptical(420, 190),
+                  bottomRight: Radius.elliptical(420, 190),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.yellow.withOpacity(0.55),
+                    blurRadius: 42,
+                    spreadRadius: 8,
+                  ),
+                ],
               ),
             ),
           ),
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.of(context).padding.top + FrostedAppBar.barHeight + 8,
+              20,
+              24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Good day.',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2D2F2F),
+                Text(
+                  'Good day!',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'How are you feeling in this moment?',
-                  style: TextStyle(fontSize: 16, color: _muted),
+                // const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: _muted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    children: [
+                      TextSpan(text: 'How are you '),
+                      TextSpan(
+                        text: 'feeling',
+                        style: GoogleFonts.inter(
+                          color: AppColors.primaryPink,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      TextSpan(text: ' today?'),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 18),
-
-                GridView.count(
-                  crossAxisCount: 5,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.72,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _moodButton(
-                      vm,
-                      5,
-                      '😄',
-                      'Radiant',
-                      const Color(0xFFDDFCDE),
-                    ),
-                    _moodButton(vm, 4, '🙂', 'Calm', const Color(0xFFB2E4FB)),
-                    _moodButton(vm, 3, '😐', 'Steady', const Color(0xFFE7E8E8)),
-                    _moodButton(vm, 2, '😔', 'Heavy', const Color(0xFFF0F1F1)),
-                    _moodButton(
-                      vm,
-                      1,
-                      '😰',
-                      'Fragile',
-                      const Color(0xFFFCE2E8),
-                    ),
-                  ],
-                ),
+                _buildMoodCarousel(vm),
                 const SizedBox(height: 18),
 
                 _glassCard(
@@ -163,7 +255,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF2D2F2F),
+                          color: AppColors.black,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -197,7 +289,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2D2F2F),
+                            color: AppColors.black,
                           ),
                         ),
                       ),
@@ -228,7 +320,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2D2F2F),
+                            color: AppColors.black,
                           ),
                         ),
                       ),
@@ -266,7 +358,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
                       vm.errorMessage,
-                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                      style: const TextStyle(color: AppColors.red, fontSize: 13),
                     ),
                   ),
 
@@ -311,7 +403,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: _primary,
-                                        foregroundColor: Colors.white,
+                                        foregroundColor: AppColors.white,
                                       ),
                                       child: const Text('Update'),
                                     ),
@@ -339,14 +431,14 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     elevation: 8,
                     shadowColor: _primary.withOpacity(0.3),
                     backgroundColor: _primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                   child: vm.isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator(color: AppColors.white)
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -376,12 +468,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.75),
+        color: AppColors.white.withOpacity(0.75),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white),
+        border: Border.all(color: AppColors.white),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppColors.black.withOpacity(0.03),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -399,7 +491,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: const Color(0xFFD8DADA)),
         ),
@@ -407,4 +499,18 @@ class _CheckinScreenState extends State<CheckinScreen> {
       ),
     );
   }
+}
+
+class _MoodOption {
+  const _MoodOption({
+    required this.mood,
+    required this.label,
+    required this.asset,
+    required this.cardColor,
+  });
+
+  final int mood;
+  final String label;
+  final String asset;
+  final Color cardColor;
 }

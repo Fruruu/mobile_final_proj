@@ -26,6 +26,14 @@ class ReportViewModel extends ChangeNotifier {
   double _moodWithPoorSleep = 0;
   
   String _insightText = '';
+  final Map<String, String> _insightByView = {
+    'weekly': '',
+    'monthly': '',
+  };
+  final Map<String, String> _insightSignatureByView = {
+    'weekly': '',
+    'monthly': '',
+  };
   bool _isLoading = false;
   String _errorMessage = '';
 
@@ -62,8 +70,12 @@ class ReportViewModel extends ChangeNotifier {
       _weeklyCheckins = weekly;
       _monthlyCheckins = monthly;
 
-      // Generate initial analysis and insight
-      await _analyzeAndGenerateInsight(userId);
+      // Generate insight only when view data has changed.
+      await _refreshInsightIfNeededForView('weekly', userId);
+      await _refreshInsightIfNeededForView('monthly', userId);
+
+      // Apply selected view snapshot for UI.
+      _applySelectedViewSnapshot();
 
     } catch (e) {
       _errorMessage = 'Failed to load reports: $e';
@@ -77,6 +89,9 @@ class ReportViewModel extends ChangeNotifier {
   void switchView(String view) {
     if (view != _selectedView) {
       _selectedView = view;
+
+      // Switches should be instant and should not trigger a fresh AI prompt.
+      _applySelectedViewSnapshot();
       notifyListeners();
     }
   }
@@ -101,6 +116,84 @@ class ReportViewModel extends ChangeNotifier {
 
     // Generate Claude insight
     await _generateClaudeInsight(userId);
+  }
+
+  Future<void> _refreshInsightIfNeededForView(String view, String userId) async {
+    final previousView = _selectedView;
+    _selectedView = view;
+
+    final data = checkins;
+    final signature = _buildDataSignature(data);
+
+    if (data.isEmpty) {
+      _insightByView[view] = 'No data available for this period. Start tracking your mood!';
+      _insightSignatureByView[view] = signature;
+      _selectedView = previousView;
+      return;
+    }
+
+    _calculateMoodFrequency(data);
+    _calculateAverages(data);
+    _calculateHabitCorrelation(data);
+
+    final cachedSignature = _insightSignatureByView[view] ?? '';
+    final cachedInsight = _insightByView[view] ?? '';
+
+    if (signature != cachedSignature || cachedInsight.isEmpty) {
+      await _generateClaudeInsight(userId);
+      _insightByView[view] = _insightText;
+      _insightSignatureByView[view] = signature;
+    } else {
+      _insightText = cachedInsight;
+    }
+
+    _selectedView = previousView;
+  }
+
+  void _applySelectedViewSnapshot() {
+    final data = checkins;
+
+    if (data.isEmpty) {
+      _moodFrequency = {};
+      _averageMood = 0;
+      _averageSleep = 0;
+      _exerciseCount = 0;
+      _averageWater = 0;
+      _moodWithExercise = 0;
+      _moodWithoutExercise = 0;
+      _moodWithGoodSleep = 0;
+      _moodWithPoorSleep = 0;
+      _insightText = 'No data available for this period. Start tracking your mood!';
+      return;
+    }
+
+    _calculateMoodFrequency(data);
+    _calculateAverages(data);
+    _calculateHabitCorrelation(data);
+
+    _insightText = _insightByView[_selectedView] ?? '';
+    if (_insightText.isEmpty) {
+      _insightText = 'Insight will refresh after your next check-in update.';
+    }
+  }
+
+  String _buildDataSignature(List<DailyCheckin> data) {
+    if (data.isEmpty) {
+      return 'empty';
+    }
+
+    final normalized = data.map((checkin) {
+      final date = checkin.date.toIso8601String().split('T')[0];
+      final mood = checkin.userMood?.toString() ?? 'n';
+      final sleep = checkin.sleepHours?.toStringAsFixed(1) ?? 'n';
+      final exercised = checkin.exercised ? '1' : '0';
+      final water = checkin.waterGlasses?.toString() ?? 'n';
+      final createdAt = checkin.createdAt ?? '';
+      return '$date:$mood:$sleep:$exercised:$water:$createdAt';
+    }).toList()
+      ..sort();
+
+    return normalized.join('|');
   }
 
   // Calculate mood frequency distribution

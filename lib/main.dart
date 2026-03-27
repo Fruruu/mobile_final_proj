@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'theme/app_colors.dart';
 import 'view_models/auth_view_model.dart';
 import 'view_models/checkin_view_model.dart';
 import 'view_models/journal_view_model.dart';
@@ -85,12 +87,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseTheme = ThemeData.light(useMaterial3: true);
+    final interTextTheme = GoogleFonts.interTextTheme(baseTheme.textTheme);
+
     return MaterialApp(
       title: 'Mood Path',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryPink),
         useMaterial3: true,
+        fontFamily: GoogleFonts.inter().fontFamily,
+        textTheme: interTextTheme,
+        primaryTextTheme: GoogleFonts.interTextTheme(baseTheme.primaryTextTheme),
       ),
       initialRoute: '/login',
       onGenerateRoute: _buildRoute,

@@ -19,11 +19,21 @@ dependencies:
   http: ^1.1.0
   # Secure API key storage
   flutter_dotenv: ^5.1.0
+  google_fonts: ^6.3.0
+  flutter_svg: ^2.2.0
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/logos/
+  fonts:
+    - family: FafoSans
+      fonts:
+        - asset: assets/fonts/Fafo Sans/Fafo Sans Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Fafo Sans/Fafo Sans Bold.ttf
+          weight: 700
 
 dev_dependencies:
   flutter_test:

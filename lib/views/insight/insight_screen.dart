@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../view_models/insight_view_model.dart';
+import '../../widgets/frosted_app_bar.dart';
+import '../../theme/app_colors.dart';
 
 class InsightScreen extends StatefulWidget {
   const InsightScreen({super.key});
@@ -11,11 +13,11 @@ class InsightScreen extends StatefulWidget {
 }
 
 class _InsightScreenState extends State<InsightScreen> {
-  static const Color _bg = Color(0xFFF6F6F6);
-  static const Color _primary = Color(0xFF75525B);
-  static const Color _primarySoft = Color(0xFFFFD1DC);
-  static const Color _text = Color(0xFF2D2F2F);
-  static const Color _muted = Color(0xFF5A5C5C);
+  static const Color _bg = AppColors.white;
+  static const Color _primary = AppColors.primaryPink;
+  static const Color _primarySoft = Color(0x33FF6169);
+  static const Color _text = AppColors.black;
+  static const Color _muted = AppColors.black;
 
   late String _aiMood;
   late String _aiInsight;
@@ -56,18 +58,11 @@ class _InsightScreenState extends State<InsightScreen> {
 
     return Scaffold(
       backgroundColor: _bg,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Your Insights',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: _primary,
-          ),
-        ),
-        backgroundColor: _bg,
-        foregroundColor: _primary,
-        elevation: 0,
+      extendBodyBehindAppBar: true,
+      appBar: FrostedAppBar(
+        title: 'Your Insights',
+        showBackButton: true,
+        onBackPressed: () => Navigator.pushReplacementNamed(context, '/history'),
       ),
       body: Stack(
         children: [
@@ -79,7 +74,7 @@ class _InsightScreenState extends State<InsightScreen> {
               height: 220,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0x22FFD1DC),
+                color: Color(0x26FF6169),
               ),
             ),
           ),
@@ -91,12 +86,17 @@ class _InsightScreenState extends State<InsightScreen> {
               height: 200,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0x22B2E4FB),
+                color: Color(0x334EC1F5),
               ),
             ),
           ),
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.of(context).padding.top + FrostedAppBar.barHeight + 8,
+              20,
+              24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -199,7 +199,7 @@ class _InsightScreenState extends State<InsightScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE7F6FD),
+                  color: const Color(0x334EC1F5),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
@@ -243,7 +243,7 @@ class _InsightScreenState extends State<InsightScreen> {
                 child: Text(
                   'Could not load check-in data',
                   style: TextStyle(
-                    color: Colors.red.shade600,
+                    color: AppColors.red,
                     fontSize: 14,
                   ),
                 ),
@@ -263,14 +263,14 @@ class _InsightScreenState extends State<InsightScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                  color: const Color(0x55FFDE71),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: const Text(
                   'Journal entry saved and analyzed',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF854D0E),
+                    color: AppColors.orange,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -288,7 +288,7 @@ class _InsightScreenState extends State<InsightScreen> {
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: _primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(999),
@@ -316,7 +316,7 @@ class _InsightScreenState extends State<InsightScreen> {
                 ),
               ),
               child: const Text(
-                'View History',
+                'View Entries',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
