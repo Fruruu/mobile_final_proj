@@ -8,6 +8,7 @@ import '../../models/journal_entry.dart';
 import '../../theme/app_colors.dart';
 import '../../view_models/history_view_model.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/auth_visuals.dart';
 import '../../widgets/entry_checkin_card.dart';
 import '../../widgets/frosted_app_bar.dart';
 import '../../widgets/overlay_action_menu.dart';
@@ -70,7 +71,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _buildBody(HistoryViewModel vm, String userId) {
     if (vm.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryPink),
+        child: AnimatedMoodPathLogo(
+          size: 68,
+          iconSize: 58,
+          interval: Duration(milliseconds: 1200),
+        ),
       );
     }
 

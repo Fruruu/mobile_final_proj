@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../view_models/insight_view_model.dart';
+import '../../widgets/auth_visuals.dart';
 import '../../widgets/frosted_app_bar.dart';
 import '../../theme/app_colors.dart';
 
@@ -31,8 +32,8 @@ class _InsightScreenState extends State<InsightScreen> {
 
     if (!_initialized) {
       // Extract route arguments
-      final args = ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
       _aiMood = args?['aiMood'] ?? '';
       _aiInsight = args?['aiInsight'] ?? '';
@@ -59,7 +60,8 @@ class _InsightScreenState extends State<InsightScreen> {
       appBar: FrostedAppBar(
         title: 'Your Insights',
         showBackButton: true,
-        onBackPressed: () => Navigator.pushReplacementNamed(context, '/history'),
+        onBackPressed: () =>
+            Navigator.pushReplacementNamed(context, '/history'),
       ),
       body: Stack(
         children: [
@@ -97,234 +99,229 @@ class _InsightScreenState extends State<InsightScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            // MOOD DETECTED SECTION
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _primary.withOpacity(0.12),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: _primarySoft,
-                      borderRadius: BorderRadius.circular(999),
+                // MOOD DETECTED SECTION
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: const Text(
-                      'MOOD DETECTED',
-                      style: TextStyle(
-                        color: _primary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                        fontSize: 11,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _primary.withOpacity(0.12),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
                       ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _primarySoft,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Text(
+                          'MOOD DETECTED',
+                          style: TextStyle(
+                            color: _primary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      SvgPicture.asset(
+                        _getMoodAssetForAiMood(_aiMood),
+                        width: 86,
+                        height: 86,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _aiMood.isNotEmpty ? _aiMood : 'Analyzing...',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: _text,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+
+                // AI INSIGHT SECTION
+                const Text(
+                  'AI Insight',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: _text,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFD8DADA)),
+                  ),
+                  child: Text(
+                    _aiInsight.isNotEmpty ? _aiInsight : 'Loading insight...',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.6,
+                      color: _text,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  SvgPicture.asset(
-                    _getMoodAssetForAiMood(_aiMood),
-                    width: 86,
-                    height: 86,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _aiMood.isNotEmpty ? _aiMood : 'Analyzing...',
-                    style: const TextStyle(
-                      fontSize: 26,
+                ),
+                const SizedBox(height: 22),
+
+                // TODAY'S CHECK-IN SUMMARY
+                if (vm.todayCheckin != null) ...[
+                  const Text(
+                    "Today's Summary",
+                    style: TextStyle(
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: _text,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0x334EC1F5),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildMoodCheckinItem(vm.todayCheckin!.userMood),
+                        const SizedBox(height: 12),
+                        _buildCheckinItem(
+                          'Sleep',
+                          '${vm.todayCheckin!.sleepHours?.toStringAsFixed(1) ?? 0} hours',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildCheckinItem(
+                          'Exercise',
+                          vm.todayCheckin!.exercised ? 'Yes' : 'No',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildCheckinItem(
+                          'Water',
+                          '${vm.todayCheckin!.waterGlasses ?? 0} glasses',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                ] else if (vm.isLoading)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: AnimatedMoodPathLogo(
+                        size: 68,
+                        iconSize: 58,
+                        interval: Duration(milliseconds: 1200),
+                      ),
+                    ),
+                  )
+                else if (vm.errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Could not load check-in data',
+                      style: TextStyle(color: AppColors.red, fontSize: 14),
+                    ),
+                  ),
+
+                // JOURNAL TEXT (if source is journal)
+                if (_source == 'journal') ...[
+                  const Text(
+                    'Your Journal Entry',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0x55FFDE71),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Text(
+                      'Journal entry saved and analyzed',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.orange,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                 ],
-              ),
-            ),
-            const SizedBox(height: 22),
 
-            // AI INSIGHT SECTION
-            const Text(
-              'AI Insight',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: _text,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFD8DADA)),
-              ),
-              child: Text(
-                _aiInsight.isNotEmpty ? _aiInsight : 'Loading insight...',
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.6,
-                  color: _text,
-                ),
-              ),
-            ),
-            const SizedBox(height: 22),
-
-            // TODAY'S CHECK-IN SUMMARY
-            if (vm.todayCheckin != null) ...[
-              const Text(
-                "Today's Summary",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: _text,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0x334EC1F5),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildMoodCheckinItem(vm.todayCheckin!.userMood),
-                    const SizedBox(height: 12),
-                    _buildCheckinItem(
-                      'Sleep',
-                      '${vm.todayCheckin!.sleepHours?.toStringAsFixed(1) ?? 0} hours',
+                // ACTION BUTTONS
+                ElevatedButton(
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/home',
+                    (route) => false,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: _primary,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                    const SizedBox(height: 12),
-                    _buildCheckinItem(
-                      'Exercise',
-                      vm.todayCheckin!.exercised ? 'Yes' : 'No',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCheckinItem(
-                      'Water',
-                      '${vm.todayCheckin!.waterGlasses ?? 0} glasses',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-            ] else if (vm.isLoading)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: _primary,
+                  ),
+                  child: const Text(
+                    'Back to Home',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
-              )
-            else if (vm.errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Could not load check-in data',
-                  style: TextStyle(
-                    color: AppColors.red,
-                    fontSize: 14,
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/history');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _primary,
+                    side: const BorderSide(color: _primary),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: const Text(
+                    'View Entries',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
-              ),
-
-            // JOURNAL TEXT (if source is journal)
-            if (_source == 'journal') ...[
-              const Text(
-                'Your Journal Entry',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: _text,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0x55FFDE71),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Text(
-                  'Journal entry saved and analyzed',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.orange,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 22),
-            ],
-
-            // ACTION BUTTONS
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home',
-                (route) => false,
-              ),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: _primary,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              child: const Text(
-                'Back to Home',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/history');
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _primary,
-                side: const BorderSide(color: _primary),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              child: const Text(
-                'View Entries',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
               ],
             ),
           ),
         ],
-        ),
+      ),
     );
   }
 

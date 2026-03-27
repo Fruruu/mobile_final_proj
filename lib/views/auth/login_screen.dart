@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../view_models/auth_view_model.dart';
 import '../auth/signup_screen.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/auth_visuals.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,9 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   static const Color _bg = AppColors.white;
   static const Color _primary = AppColors.primaryPink;
-  static const Color _primaryDim = AppColors.orange;
   static const Color _text = AppColors.black;
-  static const Color _muted = AppColors.black;
+  static const Color _muted = Color(0xFF5B5658);
 
   @override
   void dispose() {
@@ -37,30 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: _bg,
       body: Stack(
         children: [
-          Positioned(
-            top: -120,
-            left: -110,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x55F0C3CE),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 220,
-            right: -90,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x44B2E4FB),
-              ),
-            ),
-          ),
+          const AuthGradientBackdrop(),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -72,47 +49,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
-                      child: Container(
-                        width: 76,
-                        height: 76,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [_primary, Color(0x66FF6169)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFF0C3CE).withOpacity(0.6),
-                              blurRadius: 30,
-                              spreadRadius: 6,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.cloud_outlined,
-                          color: Colors.white,
-                          size: 38,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 18),
+                        child: AnimatedMoodPathLogo(
+                          interval: Duration(seconds: 2),
                         ),
                       ),
                     ),
                     const Text(
-                      'MoodPath',
+                      'Mood Path',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 42,
+                        fontFamily: 'FafoSans',
+                        fontSize: 44,
                         fontWeight: FontWeight.w800,
-                        color: _text,
-                        letterSpacing: -1.2,
+                        color: _primary,
+                        letterSpacing: 0.2,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Log in to continue your journey!',
+                      'Log in to continue your journey.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: _muted,
@@ -158,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: _muted,
                         ),
                         onPressed: () {
@@ -172,16 +133,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (vm.errorMessage.isNotEmpty)
                       Text(
                         vm.errorMessage,
-                        style: const TextStyle(color: AppColors.red, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppColors.red,
+                          fontSize: 13,
+                        ),
                       ),
                     const SizedBox(height: 14),
                     Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_primary, _primaryDim],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        color: _primary,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
@@ -200,7 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   password: _passwordController.text.trim(),
                                 );
                                 if (success && context.mounted) {
-                                  Navigator.pushReplacementNamed(context, '/home');
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    '/home',
+                                  );
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -215,17 +178,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         child: vm.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
+                            ? const Text(
+                                'Signing In...',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               )
                             : const Text(
                                 'Sign In',
-                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                       ),
                     ),
@@ -235,18 +200,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Text(
                           'Don\'t have an account? ',
-                          style: TextStyle(color: _muted, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: _muted,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const SignupScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const SignupScreen(),
+                              ),
                             );
                           },
                           child: const Text(
                             'Create an account',
-                            style: TextStyle(color: _primary, fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                              color: _primary,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],
@@ -277,7 +250,10 @@ class _LoginScreenState extends State<LoginScreen> {
         hintStyle: const TextStyle(color: Color(0xFFACADAD)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999),
           borderSide: BorderSide.none,

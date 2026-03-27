@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/auth_view_model.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/auth_visuals.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -17,9 +18,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   static const Color _bg = AppColors.white;
   static const Color _primary = AppColors.primaryPink;
-  static const Color _primaryDim = AppColors.orange;
   static const Color _text = AppColors.black;
-  static const Color _muted = AppColors.black;
+  static const Color _muted = Color(0xFF5B5658);
 
   @override
   void dispose() {
@@ -36,30 +36,7 @@ class _SignupScreenState extends State<SignupScreen> {
       backgroundColor: _bg,
       body: Stack(
         children: [
-          Positioned(
-            top: -120,
-            left: -110,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x55F0C3CE),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 240,
-            right: -95,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x44DDFCDE),
-              ),
-            ),
-          ),
+          const AuthGradientBackdrop(),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -71,53 +48,46 @@ class _SignupScreenState extends State<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Align(
+                    const Align(
                       alignment: Alignment.center,
-                      child: Container(
-                        width: 76,
-                        height: 76,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [_primary, Color(0x66FF6169)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFF0C3CE).withOpacity(0.6),
-                              blurRadius: 30,
-                              spreadRadius: 6,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.cloud_outlined,
-                          color: Colors.white,
-                          size: 38,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 18),
+                        child: AnimatedMoodPathLogo(
+                          interval: Duration(seconds: 2),
                         ),
                       ),
                     ),
                     const Text(
-                      'Create Account',
+                      'Mood Path',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 38,
+                        fontFamily: 'FafoSans',
+                        fontSize: 44,
                         fontWeight: FontWeight.w800,
-                        color: _text,
-                        letterSpacing: -1.0,
+                        color: _primary,
+                        letterSpacing: 0.2,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Start tracking your mood and habits.',
+                      'Create your account to start your path.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: _muted,
                         fontSize: 16,
                         height: 1.45,
                         fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Create Account',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: _text,
+                        letterSpacing: -0.8,
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -157,7 +127,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: _muted,
                         ),
                         onPressed: () {
@@ -171,16 +143,15 @@ class _SignupScreenState extends State<SignupScreen> {
                     if (vm.errorMessage.isNotEmpty)
                       Text(
                         vm.errorMessage,
-                        style: const TextStyle(color: AppColors.red, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppColors.red,
+                          fontSize: 13,
+                        ),
                       ),
                     const SizedBox(height: 14),
                     Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_primary, _primaryDim],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        color: _primary,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
@@ -199,7 +170,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                   password: _passwordController.text.trim(),
                                 );
                                 if (success && context.mounted) {
-                                  Navigator.pushReplacementNamed(context, '/home');
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    '/home',
+                                  );
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -214,17 +188,19 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ),
                         child: vm.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
+                            ? const Text(
+                                'Creating Account...',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               )
                             : const Text(
                                 'Sign Up',
-                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                       ),
                     ),
@@ -234,7 +210,10 @@ class _SignupScreenState extends State<SignupScreen> {
                       children: [
                         const Text(
                           'Already have an account? ',
-                          style: TextStyle(color: _muted, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: _muted,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
@@ -242,7 +221,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                           child: const Text(
                             'Login',
-                            style: TextStyle(color: _primary, fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                              color: _primary,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],
@@ -273,7 +255,10 @@ class _SignupScreenState extends State<SignupScreen> {
         hintStyle: const TextStyle(color: Color(0xFFACADAD)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999),
           borderSide: BorderSide.none,

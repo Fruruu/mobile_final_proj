@@ -22,8 +22,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
   PageController? _moodPageController;
 
   PageController get _carouselController {
-    return _moodPageController ??=
-        PageController(viewportFraction: 0.43, initialPage: 2);
+    return _moodPageController ??= PageController(
+      viewportFraction: 0.43,
+      initialPage: 2,
+    );
   }
 
   static const List<_MoodOption> _moodOptions = [
@@ -73,7 +75,8 @@ class _CheckinScreenState extends State<CheckinScreen> {
     if (selectedIndex >= 0) {
       final target = selectedIndex.toDouble();
       final current = _carouselController.hasClients
-          ? (_carouselController.page ?? _carouselController.initialPage.toDouble())
+          ? (_carouselController.page ??
+                _carouselController.initialPage.toDouble())
           : _carouselController.initialPage.toDouble();
       if ((current - target).abs() > 0.01 && _carouselController.hasClients) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -358,7 +361,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
                       vm.errorMessage,
-                      style: const TextStyle(color: AppColors.red, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.red,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
 
@@ -438,7 +444,13 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ),
                   ),
                   child: vm.isLoading
-                      ? const CircularProgressIndicator(color: AppColors.white)
+                      ? const Text(
+                          'Saving...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

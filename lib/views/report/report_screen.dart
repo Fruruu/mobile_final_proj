@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_colors.dart';
 import '../../view_models/report_view_model.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/auth_visuals.dart';
 import '../../widgets/frosted_app_bar.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -48,8 +49,12 @@ class _ReportScreenState extends State<ReportScreen> {
       body: Consumer<ReportViewModel>(
         builder: (context, viewModel, _) {
           if (viewModel.isLoading) {
-            return Center(
-              child: CircularProgressIndicator(color: _primary),
+            return const Center(
+              child: AnimatedMoodPathLogo(
+                size: 68,
+                iconSize: 58,
+                interval: Duration(milliseconds: 1200),
+              ),
             );
           }
 
@@ -197,7 +202,9 @@ class _ReportScreenState extends State<ReportScreen> {
               value: coverage,
               minHeight: 10,
               backgroundColor: AppColors.white.withOpacity(0.75),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.darkGreen),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.darkGreen,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -429,11 +436,7 @@ class _ReportScreenState extends State<ReportScreen> {
               borderRadius: BorderRadius.circular(999),
             ),
             alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: 15,
-              color: _text,
-            ),
+            child: Icon(icon, size: 15, color: _text),
           ),
           const SizedBox(height: 6),
           Text(
@@ -458,13 +461,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              Text(
-                unit,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: _muted,
-                ),
-              ),
+              Text(unit, style: const TextStyle(fontSize: 12, color: _muted)),
             ],
           ),
         ],
@@ -475,8 +472,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildCorrelationSection(ReportViewModel viewModel) {
     final exerciseDiff =
         viewModel.moodWithExercise - viewModel.moodWithoutExercise;
-    final sleepDiff =
-        viewModel.moodWithGoodSleep - viewModel.moodWithPoorSleep;
+    final sleepDiff = viewModel.moodWithGoodSleep - viewModel.moodWithPoorSleep;
 
     return Container(
       width: double.infinity,
@@ -633,8 +629,10 @@ class _ReportScreenState extends State<ReportScreen> {
           ...sortedMoods.map((entry) {
             final mood = entry.key;
             final count = entry.value;
-            final percentage =
-                (count / viewModel.checkins.length).clamp(0.0, 1.0);
+            final percentage = (count / viewModel.checkins.length).clamp(
+              0.0,
+              1.0,
+            );
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _buildMoodBar(
@@ -702,10 +700,7 @@ class _ReportScreenState extends State<ReportScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _primary.withOpacity(0.92),
-            _primary,
-          ],
+          colors: [_primary.withOpacity(0.92), _primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

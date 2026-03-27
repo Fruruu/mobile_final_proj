@@ -127,7 +127,10 @@ class _JournalScreenState extends State<JournalScreen> {
                     padding: const EdgeInsets.only(bottom: 14),
                     child: Text(
                       vm.errorMessage,
-                      style: const TextStyle(color: AppColors.red, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.red,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ElevatedButton(
@@ -204,7 +207,13 @@ class _JournalScreenState extends State<JournalScreen> {
                     ),
                   ),
                   child: vm.isLoading
-                      ? const CircularProgressIndicator(color: AppColors.white)
+                      ? const Text(
+                          'Saving...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -228,5 +237,4 @@ class _JournalScreenState extends State<JournalScreen> {
       bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
-
 }
