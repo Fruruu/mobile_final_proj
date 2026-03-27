@@ -10,6 +10,7 @@ import '../../view_models/history_view_model.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/entry_checkin_card.dart';
 import '../../widgets/frosted_app_bar.dart';
+import '../../widgets/overlay_action_menu.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -188,7 +189,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryViewModel vm,
     String userId,
   ) {
-    final moodText = (checkin.aiMood != null && checkin.aiMood!.trim().isNotEmpty)
+    final moodText =
+        (checkin.aiMood != null && checkin.aiMood!.trim().isNotEmpty)
         ? checkin.aiMood!.trim()
         : vm.getMoodText(checkin.userMood);
     final moodAssetPath = _getMoodAssetPath(
@@ -222,7 +224,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  String _getMoodAssetPath({required String moodText, required int? fallbackMood}) {
+  String _getMoodAssetPath({
+    required String moodText,
+    required int? fallbackMood,
+  }) {
     final normalized = moodText.toLowerCase();
 
     if (normalized.contains('great') ||
@@ -287,11 +292,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.menu_book_rounded,
-            size: 20,
-            color: _text,
-          ),
+          child: const Icon(Icons.menu_book_rounded, size: 20, color: _text),
         ),
         title: Text(
           vm.formatDate(journal.date),
@@ -309,7 +310,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: PopupMenuButton<String>(
+        trailing: OverlayActionMenu<String>(
+          tooltip: 'Entry actions',
+          width: 222,
+          verticalGap: 10,
           onSelected: (value) {
             if (value == 'insight') {
               _openInsight(
@@ -324,16 +328,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
               _showDeleteJournalConfirmation(journal.id!, userId);
             }
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
+          items: const [
+            OverlayMenuItem<String>(
               value: 'insight',
-              child: Text('View Insight'),
+              label: 'View Insight',
+              icon: Icons.visibility_rounded,
+              showDividerAfter: true,
             ),
-            PopupMenuItem(
+            OverlayMenuItem<String>(
               value: 'delete',
-              child: Text('Delete'),
+              label: 'Delete',
+              icon: Icons.delete_rounded,
+              color: AppColors.red,
+              fontWeight: FontWeight.w600,
             ),
           ],
+          child: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6A6768)),
         ),
         onTap: () => _openInsight(
           aiMood: journal.aiMood,
@@ -349,11 +359,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.inbox_rounded,
-            size: 42,
-            color: _muted,
-          ),
+          const Icon(Icons.inbox_rounded, size: 42, color: _muted),
           const SizedBox(height: 10),
           const Text(
             'No entries yet',
@@ -403,9 +409,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Check-in?'),
-        content: const Text(
-          'This entry will be removed permanently.',
-        ),
+        content: const Text('This entry will be removed permanently.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -433,9 +437,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Journal?'),
-        content: const Text(
-          'This entry will be removed permanently.',
-        ),
+        content: const Text('This entry will be removed permanently.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
+import 'overlay_action_menu.dart';
 
 class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
   const FrostedAppBar({
@@ -36,7 +38,9 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: showBackButton ? 0 : 12,
       leading: showBackButton
           ? IconButton(
-              onPressed: onBackPressed ?? () => Navigator.pushReplacementNamed(context, '/history'),
+              onPressed:
+                  onBackPressed ??
+                  () => Navigator.pushReplacementNamed(context, '/history'),
               icon: const Icon(
                 Icons.arrow_back_rounded,
                 color: AppColors.primaryPink,
@@ -53,10 +57,10 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
           letterSpacing: -0.3,
         ),
       ),
-      actions: const [
+      actions: [
         Padding(
-          padding: EdgeInsets.only(right: 12),
-          child: _ProfileImageContainer(),
+          padding: const EdgeInsets.only(right: 12),
+          child: _ProfileMenuButton(),
         ),
       ],
       flexibleSpace: ClipRRect(
@@ -70,10 +74,7 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
             decoration: BoxDecoration(
               color: const Color.fromARGB(129, 255, 209, 209).withOpacity(0.52),
               border: Border(
-                bottom: BorderSide(
-                  color: _black.withOpacity(0.08),
-                  width: 1,
-                ),
+                bottom: BorderSide(color: _black.withOpacity(0.08), width: 1),
               ),
               boxShadow: [
                 BoxShadow(
@@ -86,6 +87,52 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+enum _ProfileAction { settings, logout }
+
+class _ProfileMenuButton extends StatelessWidget {
+  const _ProfileMenuButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return OverlayActionMenu<_ProfileAction>(
+      tooltip: 'Profile menu',
+      offset: const Offset(0, 8),
+      width: 228,
+      verticalGap: 10,
+      onSelected: (action) async {
+        if (action == _ProfileAction.logout) {
+          await Supabase.instance.client.auth.signOut();
+          if (context.mounted) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+              (route) => false,
+            );
+          }
+        }
+      },
+      items: const [
+        OverlayMenuItem<_ProfileAction>(
+          value: _ProfileAction.settings,
+          label: 'Settings',
+          icon: Icons.settings,
+          color: AppColors.black,
+          fontWeight: FontWeight.w500,
+          showDividerAfter: true,
+        ),
+        OverlayMenuItem<_ProfileAction>(
+          value: _ProfileAction.logout,
+          label: 'Logout',
+          icon: Icons.logout_rounded,
+          color: AppColors.red,
+          fontWeight: FontWeight.w600,
+        ),
+      ],
+      child: const _ProfileImageContainer(),
     );
   }
 }
@@ -104,11 +151,7 @@ class _ProfileImageContainer extends StatelessWidget {
         border: Border.all(color: AppColors.white, width: 1.5),
       ),
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.person,
-        size: 20,
-        color: AppColors.white,
-      ),
+      child: const Icon(Icons.person, size: 20, color: AppColors.white),
     );
   }
 }

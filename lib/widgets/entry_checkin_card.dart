@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_colors.dart';
+import 'overlay_action_menu.dart';
 
 class EntryCheckinCard extends StatelessWidget {
   const EntryCheckinCard({
@@ -62,18 +63,27 @@ class EntryCheckinCard extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: PopupMenuButton<String>(
+        trailing: OverlayActionMenu<String>(
+          tooltip: 'Entry actions',
+          width: 222,
+          verticalGap: 10,
           onSelected: onMenuSelected,
-          itemBuilder: (_) => const [
-            PopupMenuItem(
+          items: const [
+            OverlayMenuItem<String>(
               value: 'insight',
-              child: Text('View Insight'),
+              label: 'View Insight',
+              icon: Icons.visibility_rounded,
+              showDividerAfter: true,
             ),
-            PopupMenuItem(
+            OverlayMenuItem<String>(
               value: 'delete',
-              child: Text('Delete'),
+              label: 'Delete',
+              icon: Icons.delete_rounded,
+              color: AppColors.red,
+              fontWeight: FontWeight.w600,
             ),
           ],
+          child: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6A6768)),
         ),
         onTap: onTap,
       ),

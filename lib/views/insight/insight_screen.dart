@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../view_models/insight_view_model.dart';
@@ -46,10 +47,6 @@ class _InsightScreenState extends State<InsightScreen> {
 
       _initialized = true;
     }
-  }
-
-  String _getMoodEmoji() {
-    return Provider.of<InsightViewModel>(context).getMoodEmoji(_aiMood);
   }
 
   @override
@@ -138,9 +135,11 @@ class _InsightScreenState extends State<InsightScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text(
-                    _getMoodEmoji(),
-                    style: const TextStyle(fontSize: 70),
+                  SvgPicture.asset(
+                    _getMoodAssetForAiMood(_aiMood),
+                    width: 86,
+                    height: 86,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -205,23 +204,20 @@ class _InsightScreenState extends State<InsightScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCheckinItem(
-                      '😊 Your Mood',
-                      _getMoodNumberEmoji(vm.todayCheckin!.userMood),
-                    ),
+                    _buildMoodCheckinItem(vm.todayCheckin!.userMood),
                     const SizedBox(height: 12),
                     _buildCheckinItem(
-                      '😴 Sleep',
+                      'Sleep',
                       '${vm.todayCheckin!.sleepHours?.toStringAsFixed(1) ?? 0} hours',
                     ),
                     const SizedBox(height: 12),
                     _buildCheckinItem(
-                      '💪 Exercise',
+                      'Exercise',
                       vm.todayCheckin!.exercised ? 'Yes' : 'No',
                     ),
                     const SizedBox(height: 12),
                     _buildCheckinItem(
-                      '💧 Water',
+                      'Water',
                       '${vm.todayCheckin!.waterGlasses ?? 0} glasses',
                     ),
                   ],
@@ -356,20 +352,113 @@ class _InsightScreenState extends State<InsightScreen> {
     );
   }
 
-  String _getMoodNumberEmoji(int? mood) {
+  Widget _buildMoodCheckinItem(int? mood) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Your Mood',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: _text,
+          ),
+        ),
+        Row(
+          children: [
+            SvgPicture.asset(
+              _getMoodAssetForNumber(mood),
+              width: 18,
+              height: 18,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _getMoodScoreText(mood),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: _primary,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _getMoodScoreText(int? mood) {
     switch (mood) {
       case 1:
-        return '😰 (1/5)';
+        return '1/5';
       case 2:
-        return '😔 (2/5)';
+        return '2/5';
       case 3:
-        return '😐 (3/5)';
+        return '3/5';
       case 4:
-        return '🙂 (4/5)';
+        return '4/5';
       case 5:
-        return '😄 (5/5)';
+        return '5/5';
       default:
         return 'Not set';
     }
+  }
+
+  String _getMoodAssetForNumber(int? mood) {
+    switch (mood) {
+      case 5:
+        return 'assets/logos/very-happy-face.svg';
+      case 4:
+        return 'assets/logos/happy-face.svg';
+      case 3:
+        return 'assets/logos/neutral-face.svg';
+      case 2:
+        return 'assets/logos/sad-face.svg';
+      case 1:
+        return 'assets/logos/very-sad-face.svg';
+      default:
+        return 'assets/logos/neutral-face.svg';
+    }
+  }
+
+  String _getMoodAssetForAiMood(String? aiMood) {
+    if (aiMood == null || aiMood.trim().isEmpty) {
+      return 'assets/logos/neutral-face.svg';
+    }
+
+    final lower = aiMood.toLowerCase();
+    if (lower.contains('great') ||
+        lower.contains('radiant') ||
+        lower.contains('excellent') ||
+        lower.contains('very happy')) {
+      return 'assets/logos/very-happy-face.svg';
+    }
+    if (lower.contains('good') ||
+        lower.contains('calm') ||
+        lower.contains('positive') ||
+        lower.contains('happy')) {
+      return 'assets/logos/happy-face.svg';
+    }
+    if (lower.contains('neutral') ||
+        lower.contains('okay') ||
+        lower.contains('normal') ||
+        lower.contains('steady')) {
+      return 'assets/logos/neutral-face.svg';
+    }
+    if (lower.contains('sad') ||
+        lower.contains('down') ||
+        lower.contains('bad') ||
+        lower.contains('heavy')) {
+      return 'assets/logos/sad-face.svg';
+    }
+    if (lower.contains('anxious') ||
+        lower.contains('stressed') ||
+        lower.contains('worried') ||
+        lower.contains('fragile') ||
+        lower.contains('very low')) {
+      return 'assets/logos/very-sad-face.svg';
+    }
+
+    return 'assets/logos/neutral-face.svg';
   }
 }
