@@ -24,7 +24,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _initialized = false;
   String _filter = 'all';
 
-  static const Color _bg = Color(0xFFF4EFF1);
+  static const Color _bg = Color(0xFFFBF5F8);
   static const Color _text = AppColors.black;
   static const Color _muted = Color(0xFF8F8B8C);
   static const Color _primary = AppColors.primaryPink;
@@ -55,14 +55,116 @@ class _HistoryScreenState extends State<HistoryScreen> {
       backgroundColor: _bg,
       extendBodyBehindAppBar: true,
       appBar: const FrostedAppBar(title: 'Entries'),
-      body: Padding(
-        padding: EdgeInsets.fromLTRB(
-          14,
-          MediaQuery.of(context).padding.top + FrostedAppBar.barHeight + 10,
-          14,
-          18,
-        ),
-        child: _buildBody(vm, userId),
+      body: Stack(
+        children: [
+          // Layer 1 — radial yellow-to-blush glow at top
+          Positioned(
+            top: -160,
+            left: -120,
+            right: -120,
+            child: Container(
+              height: 640,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 0.82,
+                  colors: [
+                    AppColors.yellow.withOpacity(0.80),
+                    AppColors.yellow.withOpacity(0.40),
+                    AppColors.primaryPink.withOpacity(0.12),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.45, 0.72, 1.0],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.elliptical(460, 210),
+                  bottomRight: Radius.elliptical(460, 210),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.yellow.withOpacity(0.30),
+                    blurRadius: 60,
+                    spreadRadius: 10,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Layer 2 — soft pink bloom, bottom-right
+          Positioned(
+            bottom: -100,
+            right: -110,
+            child: Container(
+              width: 360,
+              height: 360,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.primaryPink.withOpacity(0.14),
+                    AppColors.primaryPink.withOpacity(0.05),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Layer 3 — amber warmth, bottom-left
+          Positioned(
+            bottom: 80,
+            left: -80,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.yellow.withOpacity(0.20),
+                    AppColors.yellow.withOpacity(0.06),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Layer 4 — faint rose tint mid-screen for continuity
+          Positioned(
+            top: 340,
+            left: -60,
+            right: -60,
+            child: Container(
+              height: 280,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 0.9,
+                  colors: [
+                    AppColors.primaryPink.withOpacity(0.06),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.of(context).padding.top + FrostedAppBar.barHeight + 8,
+              20,
+              24,
+            ),
+            child: _buildBody(vm, userId),
+          ),
+        ],
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
@@ -283,21 +385,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
     String userId,
   ) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFFFFBF5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFE8E3DC).withOpacity(0.6),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE8E3DC).withOpacity(0.8),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        contentPadding: EdgeInsets.zero,
         leading: Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: AppColors.yellow.withOpacity(0.42),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.yellow.withOpacity(0.45),
+            borderRadius: BorderRadius.circular(14),
           ),
           alignment: Alignment.center,
-          child: const Icon(Icons.menu_book_rounded, size: 20, color: _text),
+          child: const Icon(Icons.menu_book_rounded, size: 22, color: _text),
         ),
         title: Text(
           vm.formatDate(journal.date),

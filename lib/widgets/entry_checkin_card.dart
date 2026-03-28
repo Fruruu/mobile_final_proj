@@ -25,32 +25,47 @@ class EntryCheckinCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+  return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.black.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: AppColors.black.withOpacity(0.04),
+            blurRadius: 24,
+            spreadRadius: -4,
+          ),
+        ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        contentPadding: EdgeInsets.zero,
         leading: Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: AppColors.blue.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primaryPink.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(14),
           ),
           alignment: Alignment.center,
           child: SvgPicture.asset(
             moodAssetPath,
-            width: 22,
-            height: 22,
+            width: 24,
+            height: 24,
             fit: BoxFit.contain,
           ),
         ),
         title: Text(
           dateLabel,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: _text,
           ),
@@ -58,9 +73,9 @@ class EntryCheckinCard extends StatelessWidget {
         subtitle: Text(
           'Check-in · $moodLabel',
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: _muted,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
         trailing: OverlayActionMenu<String>(
@@ -83,7 +98,14 @@ class EntryCheckinCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ],
-          child: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6A6768)),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.black.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6A6768)),
+          ),
         ),
         onTap: onTap,
       ),

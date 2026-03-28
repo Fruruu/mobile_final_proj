@@ -21,6 +21,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   google_fonts: ^6.3.0
   flutter_svg: ^2.2.0
+  intl: ^0.20.2
 
 flutter:
   uses-material-design: true
@@ -34,6 +35,9 @@ flutter:
           weight: 400
         - asset: assets/fonts/Fafo Sans/Fafo Sans Bold.ttf
           weight: 700
+    - family: FafoScript
+      fonts:
+        - asset: assets/fonts/Fafo Script/FafoScript-Regular.ttf
 
 dev_dependencies:
   flutter_test:
