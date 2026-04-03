@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../view_models/insight_view_model.dart';
 import '../../widgets/auth_visuals.dart';
 import '../../widgets/frosted_app_bar.dart';
@@ -24,6 +25,7 @@ class _InsightScreenState extends State<InsightScreen> {
   late String _aiMood;
   late String _aiInsight;
   late String _source;
+  late String _journalText;
   bool _initialized = false;
 
   @override
@@ -38,6 +40,8 @@ class _InsightScreenState extends State<InsightScreen> {
       _aiMood = args?['aiMood'] ?? '';
       _aiInsight = args?['aiInsight'] ?? '';
       _source = args?['source'] ?? 'checkin';
+      _journalText = args?['journalText'] ?? '';
+
 
       // Load today's check-in data
       final user = Supabase.instance.client.auth.currentUser;
@@ -160,7 +164,39 @@ class _InsightScreenState extends State<InsightScreen> {
                 ),
                 const SizedBox(height: 22),
 
-                // AI INSIGHT SECTION
+                // JOURNAL TEXT FIRST (if source is journal)
+                if (_source == 'journal') ...[
+                  const Text(
+                    'Your Journal Entry',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: _text,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0x55FFDE71),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      _journalText.isNotEmpty
+                          ? _journalText
+                          : 'No journal text available',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.amber.shade900,
+                        fontStyle: FontStyle.italic,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                ],
+
+                // AI INSIGHT SECTION (now after journal)
                 const Text(
                   'AI Insight',
                   style: TextStyle(
@@ -177,12 +213,34 @@ class _InsightScreenState extends State<InsightScreen> {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: const Color(0xFFD8DADA)),
                   ),
-                  child: Text(
-                    _aiInsight.isNotEmpty ? _aiInsight : 'Loading insight...',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.6,
-                      color: _text,
+                  child: MarkdownBody(
+                    data: _aiInsight.isNotEmpty
+                        ? _aiInsight
+                        : 'Loading insight...',
+                    styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                      p: const TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: _text,
+                      ),
+                      h1: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: _text,
+                      ),
+                      h2: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: _text,
+                      ),
+                      strong: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: _text,
+                      ),
+                      listBullet: const TextStyle(
+                        fontSize: 15,
+                        color: _text,
+                      ),
                     ),
                   ),
                 ),
@@ -190,13 +248,48 @@ class _InsightScreenState extends State<InsightScreen> {
 
                 // TODAY'S CHECK-IN SUMMARY
                 if (vm.todayCheckin != null) ...[
-                  const Text(
-                    "Today's Summary",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: _text,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Today's Summary",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: _text,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1AFF6169),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0x33FF6169),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              _getMoodEmojiFromNumber(vm.todayCheckin!.userMood),
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _getMoodScoreText(vm.todayCheckin!.userMood),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -247,35 +340,6 @@ class _InsightScreenState extends State<InsightScreen> {
                       style: TextStyle(color: AppColors.red, fontSize: 14),
                     ),
                   ),
-
-                // JOURNAL TEXT (if source is journal)
-                if (_source == 'journal') ...[
-                  const Text(
-                    'Your Journal Entry',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: _text,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0x55FFDE71),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Text(
-                      'Journal entry saved and analyzed',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.orange,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                ],
 
                 // ACTION BUTTONS
                 ElevatedButton(
@@ -415,6 +479,23 @@ class _InsightScreenState extends State<InsightScreen> {
         return 'assets/logos/very-sad-face.svg';
       default:
         return 'assets/logos/neutral-face.svg';
+    }
+  }
+
+  String _getMoodEmojiFromNumber(int? mood) {
+    switch (mood) {
+      case 5:
+        return '😄';
+      case 4:
+        return '🙂';
+      case 3:
+        return '😐';
+      case 2:
+        return '😔';
+      case 1:
+        return '😰';
+      default:
+        return '😊';
     }
   }
 

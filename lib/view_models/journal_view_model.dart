@@ -3,11 +3,13 @@ import '../models/journal_entry.dart';
 import '../services/journal_service.dart';
 import '../services/claude_service.dart';
 import '../services/database_service.dart';
+import '../services/profile_service.dart';
 
 class JournalViewModel extends ChangeNotifier {
   final JournalService _journalService = JournalService();
   final ClaudeService _claudeService = ClaudeService();
   final DatabaseService _databaseService = DatabaseService();
+  final ProfileService _profileService = ProfileService();
 
   List<JournalEntry> _journals = [];
   bool _isLoading = false;
@@ -83,15 +85,101 @@ class JournalViewModel extends ChangeNotifier {
         }).toList(),
       );
 
-      // STEP 6 - Send to Claude with everything
+      // STEP 6 - Get user's profile for personalization (name, age)
+      String? userName;
+      int? userAge;
+      try {
+        final profile = await _profileService.getProfile(userId);
+        userName = profile?.name;
+        // Calculate age from birthday
+        if (profile?.birthday != null) {
+          final now = DateTime.now();
+          int age = now.year - profile!.birthday!.year;
+          if (now.month < profile.birthday!.month ||
+              (now.month == profile.birthday!.month &&
+                  now.day < profile.birthday!.day)) {
+            age--;
+          }
+          if (age > 0) userAge = age;
+        }
+      } catch (e) {
+        // If profile fetch fails, proceed without personalization
+      }
+
+      // STEP 7 - Calculate streak
+      int streakCount = 0;
+      try {
+        final allCheckins = await _databaseService.getCheckins(userId);
+        if (allCheckins.isNotEmpty) {
+          allCheckins.sort((a, b) => b.date.compareTo(a.date));
+          int streak = 0;
+          DateTime currentDate = DateTime.now();
+          for (final checkin in allCheckins) {
+            final checkinDate = DateTime(
+              checkin.date.year,
+              checkin.date.month,
+              checkin.date.day,
+            );
+            final expectedDate = DateTime(
+              currentDate.year,
+              currentDate.month,
+              currentDate.day,
+            );
+            if (checkinDate == expectedDate) {
+              streak++;
+              currentDate = currentDate.subtract(const Duration(days: 1));
+            } else {
+              break;
+            }
+          }
+          streakCount = streak;
+        }
+      } catch (e) {
+        streakCount = 0;
+      }
+
+      // STEP 8 - Calculate top pattern from week
+      String? topPattern;
+      try {
+        if (lastSevenDays.isNotEmpty) {
+          int exerciseCount = 0;
+          int goodHydration = 0;
+          double totalSleep = 0;
+          int positiveModCount = 0;
+
+          for (final checkin in lastSevenDays) {
+            if (checkin.exercised) exerciseCount++;
+            if (checkin.waterGlasses != null && checkin.waterGlasses! >= 8) goodHydration++;
+            if (checkin.sleepHours != null) totalSleep += checkin.sleepHours!;
+            if (checkin.userMood != null && checkin.userMood! >= 4) positiveModCount++;
+          }
+
+          if (exerciseCount >= 4) {
+            topPattern = '✨ Consistent exercise - $exerciseCount/7 days';
+          } else if (goodHydration >= 4) {
+            topPattern = '💧 Strong hydration habits - $goodHydration/7 days';
+          } else if (positiveModCount >= 4) {
+            topPattern = '🌟 Positive mood trend - $positiveModCount/7 days';
+          } else if (lastSevenDays.isNotEmpty && totalSleep / lastSevenDays.length >= 7.0) {
+            final avgSleep = (totalSleep / lastSevenDays.length).toStringAsFixed(1);
+            topPattern = '😴 Great sleep average - ${avgSleep}h per night';
+          }
+        }
+      } catch (e) {
+        topPattern = null;
+      }
       final result = await _claudeService
           .analyzeJournal(
         journalText: _journalText,
         todayCheckin: todayCheckinSummary,
         weekSummary: weekSummary,
+        userName: userName,
+        age: userAge,
+        topPattern: topPattern,
+        streakCount: streakCount,
       );
 
-      // STEP 7 - Save AI results back to Supabase
+      // STEP 9 - Save AI results back to Supabase
       _aiMood = result['mood']!;
       _aiInsight = result['insight']!;
 

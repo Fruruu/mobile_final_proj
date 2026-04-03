@@ -11,19 +11,30 @@ class ClaudeService {
     required String journalText,
     required String todayCheckin,
     required String weekSummary,
+    String? userName,
+    int? age,
+    String? topPattern,
+    int? streakCount,
   }) async {
 
-    // Different prompt based on
-    // whether journal was written or not
+    // Different prompt based on sa  whether journal was written or not
     final prompt = journalText.isEmpty
         ? _buildNoJournalPrompt(
             todayCheckin,
             weekSummary,
+            userName: userName,
+            age: age,
+            topPattern: topPattern,
+            streakCount: streakCount,
           )
         : _buildFullPrompt(
             journalText,
             todayCheckin,
             weekSummary,
+            userName: userName,
+            age: age,
+            topPattern: topPattern,
+            streakCount: streakCount,
           );
 
     try {
@@ -64,9 +75,31 @@ class ClaudeService {
     String journalText,
     String todayCheckin,
     String weekSummary,
+    {
+      String? userName,
+      int? age,
+      String? topPattern,
+      int? streakCount,
+    }
   ) {
+    final greeting = userName != null && userName.isNotEmpty
+        ? 'Hi $userName! You are a personal wellness assistant.'
+        : 'You are a personal wellness assistant.';
+    
+    final ageContext = age != null && age > 0
+        ? '\nThe user is $age years old.'
+        : '';
+    
+    final patternContext = topPattern != null && topPattern.isNotEmpty
+        ? '\nTheir strongest pattern this week: $topPattern'
+        : '';
+    
+    final streakContext = streakCount != null && streakCount > 1
+        ? '\n🔥 They have a $streakCount-day check-in streak! Acknowledge this achievement.'
+        : '';
+        
     return """
-You are a personal wellness assistant.
+$greeting$ageContext$patternContext$streakContext
 
 Here is the user's check-in data for today:
 $todayCheckin
@@ -80,12 +113,12 @@ Based on their habits today,
 this week's patterns, and journal:
 1. Identify mood from journal and habits
 2. Connect habits to mood
-3. Give ONE personalized insight
-4. Be warm and supportive
+3. Give ONE personalized insight that acknowledges their progress
+4. Be warm, supportive, and specific to them
 
 Respond in EXACTLY this format:
 MOOD: [Happy/Neutral/Sad/Stressed/Anxious]
-INSIGHT: [2-3 supportive sentences]
+INSIGHT: [2-3 supportive, personalized sentences]
 """;
   }
 
@@ -93,9 +126,31 @@ INSIGHT: [2-3 supportive sentences]
   String _buildNoJournalPrompt(
     String todayCheckin,
     String weekSummary,
+    {
+      String? userName,
+      int? age,
+      String? topPattern,
+      int? streakCount,
+    }
   ) {
+    final greeting = userName != null && userName.isNotEmpty
+        ? 'Hi $userName! You are a personal wellness assistant.'
+        : 'You are a personal wellness assistant.';
+    
+    final ageContext = age != null && age > 0
+        ? '\nThe user is $age years old.'
+        : '';
+    
+    final patternContext = topPattern != null && topPattern.isNotEmpty
+        ? '\nTheir strongest pattern this week: $topPattern'
+        : '';
+    
+    final streakContext = streakCount != null && streakCount > 1
+        ? '\n🔥 They have a $streakCount-day check-in streak! Acknowledge this achievement.'
+        : '';
+        
     return """
-You are a personal wellness assistant.
+$greeting$ageContext$patternContext$streakContext
 
 The user did not write a journal today.
 
@@ -109,12 +164,12 @@ Based on their habits today
 and this week's patterns:
 1. Determine mood from check-in score
 2. Give ONE supportive insight
-   about their habits
+   that's specific to them
 3. Be warm and encouraging
 
 Respond in EXACTLY this format:
 MOOD: [Happy/Neutral/Sad/Stressed/Anxious]
-INSIGHT: [2-3 supportive sentences]
+INSIGHT: [2-3 supportive, personalized sentences]
 """;
   }
 

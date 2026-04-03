@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../theme/app_colors.dart';
 import '../../view_models/report_view_model.dart';
@@ -718,13 +719,35 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            viewModel.insightText,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.45,
-              color: AppColors.white,
-              fontWeight: FontWeight.w500,
+          MarkdownBody(
+            data: viewModel.insightText.isNotEmpty
+                ? viewModel.insightText
+                : 'No insight available yet.',
+            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+              p: const TextStyle(
+                fontSize: 13,
+                height: 1.45,
+                color: AppColors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              h1: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColors.white,
+              ),
+              h2: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.white,
+              ),
+              strong: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.white,
+              ),
+              listBullet: const TextStyle(
+                fontSize: 13,
+                color: AppColors.white,
+              ),
             ),
           ),
         ],

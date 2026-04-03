@@ -409,74 +409,146 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ],
       ),
       child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.yellow.withOpacity(0.45),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.menu_book_rounded, size: 22, color: _text),
-        ),
-        title: Text(
-          vm.formatDate(journal.date),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: _text,
-          ),
-        ),
-        subtitle: const Text(
-          'Journal entry',
-          style: TextStyle(
-            fontSize: 12,
-            color: _muted,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: OverlayActionMenu<String>(
-          tooltip: 'Entry actions',
-          width: 222,
-          verticalGap: 10,
-          onSelected: (value) {
-            if (value == 'insight') {
-              _openInsight(
-                aiMood: journal.aiMood,
-                aiInsight: journal.aiInsight,
-                source: 'history',
-              );
-              return;
-            }
-
-            if (journal.id != null && journal.id!.isNotEmpty) {
-              _showDeleteJournalConfirmation(journal.id!, userId);
-            }
-          },
-          items: const [
-            OverlayMenuItem<String>(
-              value: 'insight',
-              label: 'View Insight',
-              icon: Icons.visibility_rounded,
-              showDividerAfter: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.yellow.withOpacity(0.45),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.menu_book_rounded, 
+                size: 22, 
+                color: _text,
+              ),
             ),
-            OverlayMenuItem<String>(
-              value: 'delete',
-              label: 'Delete',
-              icon: Icons.delete_rounded,
-              color: AppColors.red,
-              fontWeight: FontWeight.w600,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  vm.formatDate(journal.date),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _text,
+                  ),
+                ),
+                if (journal.aiMood != null && journal.aiMood!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPink.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primaryPink.withOpacity(0.35),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      journal.aiMood!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: _text,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
-          child: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6A6768)),
-        ),
-        onTap: () => _openInsight(
-          aiMood: journal.aiMood,
-          aiInsight: journal.aiInsight,
-          source: 'history',
-        ),
-      ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (journal.journalText != null &&
+                    journal.journalText!.isNotEmpty)
+                  Text(
+                    journal.journalText!.length > 80
+                        ? '${journal.journalText!.substring(0, 80)}...'
+                        : journal.journalText!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: _muted,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+                  )
+                else
+                  const Text(
+                    'No journal text',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                if (journal.aiInsight != null &&
+                    journal.aiInsight!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Insight: ${journal.aiInsight!.length > 100 ? journal.aiInsight!.substring(0, 100) + '...' : journal.aiInsight!}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: _muted,
+                      fontWeight: FontWeight.w500,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            trailing: OverlayActionMenu<String>(
+              tooltip: 'Entry actions',
+              width: 222,
+              verticalGap: 10,
+              onSelected: (value) {
+                if (value == 'insight') {
+                  _openInsight(
+                    aiMood: journal.aiMood,
+                    aiInsight: journal.aiInsight,
+                    source: 'journal',
+                    journalText: journal.journalText,
+                  );
+                  return;
+                }
+                if (journal.id != null &&
+                    journal.id!.isNotEmpty) {
+                  _showDeleteJournalConfirmation(
+                    journal.id!,
+                    userId,
+                  );
+                }
+              },
+              items: const [
+                OverlayMenuItem<String>(
+                  value: 'insight',
+                  label: 'View Insight',
+                  icon: Icons.visibility_rounded,
+                  showDividerAfter: true,
+                ),
+                OverlayMenuItem<String>(
+                  value: 'delete',
+                  label: 'Delete',
+                  icon: Icons.delete_rounded,
+                  color: AppColors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ],
+              child: const Icon(
+                Icons.more_horiz_rounded,
+                color: Color(0xFF6A6768),
+              ),
+            ),
+            onTap: () => _openInsight(
+              aiMood: journal.aiMood,
+              aiInsight: journal.aiInsight,
+              source: 'journal',
+              journalText: journal.journalText,
+            ),
+          ),
     );
   }
 
@@ -513,6 +585,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     required String? aiMood,
     required String? aiInsight,
     required String source,
+    String? journalText,
   }) {
     Navigator.pushNamed(
       context,
@@ -525,6 +598,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ? 'No insight available'
             : aiInsight,
         'source': source,
+        'journalText': journalText ?? '',
       },
     );
   }
