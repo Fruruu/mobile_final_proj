@@ -11,6 +11,7 @@ import 'view_models/insight_view_model.dart';
 import 'view_models/history_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/report_view_model.dart';
+import 'view_models/profile_view_model.dart';
 import 'views/auth/login_screen.dart';
 import 'views/home_screen.dart';
 import 'views/checkin/checkin_screen.dart';
@@ -18,6 +19,7 @@ import 'views/journal/journal_screen.dart';
 import 'views/insight/insight_screen.dart';
 import 'views/history/history_screen.dart';
 import 'views/report/report_screen.dart';
+import 'views/profile/profile_edit_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +33,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => CheckinViewModel()),
         ChangeNotifierProvider(create: (_) => JournalViewModel()),
         ChangeNotifierProvider(create: (_) => InsightViewModel()),
@@ -66,6 +69,11 @@ class MyApp extends StatelessWidget {
       case '/insight':
         return MaterialPageRoute(
           builder: (_) => const InsightScreen(),
+          settings: settings,
+        );
+      case '/profile-edit':
+        return MaterialPageRoute(
+          builder: (_) => const ProfileEditScreen(),
           settings: settings,
         );
       default:

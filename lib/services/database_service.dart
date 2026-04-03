@@ -47,6 +47,21 @@ class DatabaseService {
     return data.map((e) => DailyCheckin.fromJson(e)).toList();
   }
 
+  // READ RECENT CHECK-INS (for faster streak calculation)
+  Future<List<DailyCheckin>> getRecentCheckins(
+    String userId, {
+    int limit = 120,
+  }) async {
+    final data = await _supabase
+        .from('daily_checkins')
+        .select()
+        .eq('user_id', userId)
+        .order('date', ascending: false)
+        .limit(limit);
+
+    return data.map((e) => DailyCheckin.fromJson(e)).toList();
+  }
+
   // READ TODAY'S CHECK-IN
   Future<DailyCheckin?> getTodayCheckin(String userId) async {
     final today = DateTime.now()

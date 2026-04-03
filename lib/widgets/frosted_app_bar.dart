@@ -104,7 +104,9 @@ class _ProfileMenuButton extends StatelessWidget {
       width: 228,
       verticalGap: 10,
       onSelected: (action) async {
-        if (action == _ProfileAction.logout) {
+        if (action == _ProfileAction.settings) {
+          Navigator.pushNamed(context, '/profile-edit');
+        } else if (action == _ProfileAction.logout) {
           await Supabase.instance.client.auth.signOut();
           if (context.mounted) {
             Navigator.pushNamedAndRemoveUntil(
@@ -118,8 +120,8 @@ class _ProfileMenuButton extends StatelessWidget {
       items: const [
         OverlayMenuItem<_ProfileAction>(
           value: _ProfileAction.settings,
-          label: 'Settings',
-          icon: Icons.settings,
+          label: 'User Profile',
+          icon: Icons.person,
           color: AppColors.black,
           fontWeight: FontWeight.w500,
           showDividerAfter: true,

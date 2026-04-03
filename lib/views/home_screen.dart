@@ -3,6 +3,7 @@
   import 'package:provider/provider.dart';
   import 'package:supabase_flutter/supabase_flutter.dart';
   import '../view_models/home_view_model.dart';
+  import '../view_models/profile_view_model.dart';
   import '../widgets/app_bottom_nav.dart';
   import '../widgets/check_list_item_card.dart';
   import '../widgets/frosted_app_bar.dart';
@@ -34,8 +35,10 @@
       if (!_initialized) {
         final user = Supabase.instance.client.auth.currentUser;
         if (user != null) {
-          final vm = Provider.of<HomeViewModel>(context, listen: false);
-          vm.loadDashboard(user.id);
+          final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+          final profileVm = Provider.of<ProfileViewModel>(context, listen: false);
+          homeVm.loadDashboard(user.id);
+          profileVm.loadProfile(user.id);
         }
         _initialized = true;
       }
@@ -44,9 +47,10 @@
     @override
     Widget build(BuildContext context) {
       final vm = Provider.of<HomeViewModel>(context);
+      final profileVm = Provider.of<ProfileViewModel>(context);
       final today = vm.todayCheckin;
       final hasCheckin = today != null;
-      final userName = _formatName(vm.getUserName());
+      final userName = _formatName(profileVm.getDisplayName());
       final hydrationCount = today?.waterGlasses ?? 0;
       final hydrationCompleted = hydrationCount >= 8;
       final streakCount = vm.streakCount;
@@ -76,8 +80,70 @@
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
+                  children: [                    // Profile completion banner for existing users
+                    if (profileVm.profile == null)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              _orange.withOpacity(0.15),
+                              _yellow.withOpacity(0.15),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _orange.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              '👤',
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Complete Your Profile',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: _black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Add your name & birthday for more personalized AI insights.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _black,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () => Navigator.pushNamed(context, '/profile-edit'),
+                                    child: Text(
+                                      'Edit Profile →',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: _pink,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),                    const Text(
                       'Today\'s Snapshot',
                       style: TextStyle(
                         fontSize: 22,
@@ -244,7 +310,8 @@
             ),
             const SizedBox(height: 10),
             Center(
-              child: Column(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   FilledButton(
                     onPressed: () => Navigator.pushNamed(context, '/checkin'),
@@ -257,7 +324,7 @@
                     ),
                     child: Text(hasCheckin ? 'Update' : 'Check-In'),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 10),
                   FilledButton(
                     onPressed: () => Navigator.pushNamed(context, '/journal'),
                     style: FilledButton.styleFrom(

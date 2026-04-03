@@ -25,11 +25,13 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Get today's check-in
-      _todayCheckin = await _databaseService.getTodayCheckin(userId);
+      // Run both requests concurrently to reduce home load time.
+      final todayFuture = _databaseService.getTodayCheckin(userId);
+      final recentFuture = _databaseService.getRecentCheckins(userId);
 
-      // Calculate streak
-      await _calculateStreak(userId);
+      _todayCheckin = await todayFuture;
+      final recentCheckins = await recentFuture;
+      _streakCount = _calculateStreakFromCheckins(recentCheckins);
 
     } catch (e) {
       _errorMessage = 'Failed to load dashboard: $e';
@@ -39,47 +41,37 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  // Calculate consecutive days of check-ins
-  Future<void> _calculateStreak(String userId) async {
-    try {
-      final allCheckins = await _databaseService.getCheckins(userId);
-
-      if (allCheckins.isEmpty) {
-        _streakCount = 0;
-        return;
-      }
-
-      // Sort by date descending (most recent first)
-      allCheckins.sort((a, b) => b.date.compareTo(a.date));
-
-      int streak = 0;
-      DateTime currentDate = DateTime.now();
-
-      for (final checkin in allCheckins) {
-        final checkinDate = DateTime(
-          checkin.date.year,
-          checkin.date.month,
-          checkin.date.day,
-        );
-        final expectedDate = DateTime(
-          currentDate.year,
-          currentDate.month,
-          currentDate.day,
-        );
-
-        // If dates match, increment streak
-        if (checkinDate == expectedDate) {
-          streak++;
-          currentDate = currentDate.subtract(const Duration(days: 1));
-        } else {
-          break;
-        }
-      }
-
-      _streakCount = streak;
-    } catch (e) {
-      _streakCount = 0;
+  // Calculate consecutive days from a date-descending list.
+  int _calculateStreakFromCheckins(List<DailyCheckin> checkins) {
+    if (checkins.isEmpty) {
+      return 0;
     }
+
+    int streak = 0;
+    DateTime currentDate = DateTime.now();
+
+    for (final checkin in checkins) {
+      final checkinDate = DateTime(
+        checkin.date.year,
+        checkin.date.month,
+        checkin.date.day,
+      );
+      final expectedDate = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+      );
+
+      // If dates match, increment streak.
+      if (checkinDate == expectedDate) {
+        streak++;
+        currentDate = currentDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
   }
 
   // Get user email
@@ -111,6 +103,45 @@ class HomeViewModel extends ChangeNotifier {
         return '😄';
       default:
         return '😊';
+    }
+  }
+
+  // Get top pattern from this week
+  Future<String?> getWeekTopPattern(String userId) async {
+    try {
+      final lastSevenDays = await _databaseService.getLastSevenDays(userId);
+      if (lastSevenDays.isEmpty) return null;
+
+      int exerciseCount = 0;
+      int goodHydration = 0;
+      double totalSleep = 0;
+      int positiveModCount = 0;
+
+      for (final checkin in lastSevenDays) {
+        if (checkin.exercised) exerciseCount++;
+        if (checkin.waterGlasses != null && checkin.waterGlasses! >= 8) goodHydration++;
+        if (checkin.sleepHours != null) totalSleep += checkin.sleepHours!;
+        if (checkin.userMood != null && checkin.userMood! >= 4) positiveModCount++;
+      }
+
+      final avgSleep = lastSevenDays.isNotEmpty 
+          ? (totalSleep / lastSevenDays.length).toStringAsFixed(1)
+          : '0';
+
+      // Return the strongest pattern
+      if (exerciseCount >= 4) {
+        return '✨ Consistent exercise - $exerciseCount/7 days';
+      } else if (goodHydration >= 4) {
+        return '💧 Strong hydration habits - $goodHydration/7 days';
+      } else if (positiveModCount >= 4) {
+        return '🌟 Positive mood trend - $positiveModCount/7 days';
+      } else if (double.parse(avgSleep) >= 7.0) {
+        return '😴 Great sleep average - ${avgSleep}h per night';
+      }
+
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 
