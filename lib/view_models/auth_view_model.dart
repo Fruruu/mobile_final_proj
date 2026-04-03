@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/profile_service.dart';
+import '../models/user_profile.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final ProfileService _profileService = ProfileService();
 
   bool _isLoading = false;
   String _errorMessage = '';
@@ -16,6 +19,9 @@ class AuthViewModel extends ChangeNotifier {
   Future<bool> signUp({
     required String email,
     required String password,
+    String? name,
+    DateTime? birthday,
+    String? phone,
   }) async {
     _isLoading = true;
     _errorMessage = '';
@@ -28,6 +34,16 @@ class AuthViewModel extends ChangeNotifier {
       );
 
       if (response.user != null) {
+        // Create or update profile with extra fields
+        final profile = UserProfile(
+          id: response.user!.id,
+          email: email,
+          name: name?.trim().isEmpty == true ? null : name,
+          birthday: birthday,
+          phone: phone?.trim().isEmpty == true ? null : phone,
+        );
+        await _profileService.upsertProfile(profile);
+
         _isLoggedIn = true;
         _isLoading = false;
         notifyListeners();
