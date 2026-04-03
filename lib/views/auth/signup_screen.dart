@@ -14,6 +14,9 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  DateTime? _birthday;
   bool _obscurePassword = true;
 
   static const Color _bg = AppColors.white;
@@ -25,6 +28,8 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -109,6 +114,99 @@ class _SignupScreenState extends State<SignupScreen> {
                       obscureText: false,
                     ),
                     const SizedBox(height: 14),
+
+                    const Padding(
+                      padding: EdgeInsets.only(left: 14, bottom: 6),
+                      child: Text(
+                        'Name (optional)',
+                        style: TextStyle(
+                          color: _muted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    _buildInputField(
+                      controller: _nameController,
+                      hintText: 'Alex Smith',
+                      keyboardType: TextInputType.name,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 14),
+
+                    const Padding(
+                      padding: EdgeInsets.only(left: 14, bottom: 6),
+                      child: Text(
+                        'Phone (optional)',
+                        style: TextStyle(
+                          color: _muted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    _buildInputField(
+                      controller: _phoneController,
+                      hintText: '+1 555 123 4567',
+                      keyboardType: TextInputType.phone,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 14),
+
+                    const Padding(
+                      padding: EdgeInsets.only(left: 14, bottom: 6),
+                      child: Text(
+                        'Birthday (optional)',
+                        style: TextStyle(
+                          color: _muted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        final now = DateTime.now();
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              DateTime(now.year - 18, now.month, now.day),
+                          firstDate: DateTime(1900),
+                          lastDate: now,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _birthday = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.cake_outlined, color: _muted),
+                            const SizedBox(width: 12),
+                            Text(
+                              _birthday == null
+                                  ? 'Select your birthday'
+                                  : '${_birthday!.year}-${_birthday!.month.toString().padLeft(2, '0')}-${_birthday!.day.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color:
+                                    _birthday == null ? _muted : Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     const Padding(
                       padding: EdgeInsets.only(left: 14, bottom: 6),
                       child: Text(
@@ -168,6 +266,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                 final success = await vm.signUp(
                                   email: _emailController.text.trim(),
                                   password: _passwordController.text.trim(),
+                                  name: _nameController.text.trim(),
+                                  birthday: _birthday,
+                                  phone: _phoneController.text.trim(),
                                 );
                                 if (success && context.mounted) {
                                   Navigator.pushReplacementNamed(
