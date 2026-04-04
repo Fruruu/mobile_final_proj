@@ -116,6 +116,8 @@ class _ReportScreenState extends State<ReportScreen> {
                     const SizedBox(height: 10),
                     _buildViewToggle(viewModel),
                     const SizedBox(height: 10),
+                    _buildMoodCalendar(viewModel), // ← NEW
+                    const SizedBox(height: 10),
                     _buildStatsCards(viewModel),
                     const SizedBox(height: 10),
                     _buildCorrelationSection(viewModel),
@@ -136,6 +138,300 @@ class _ReportScreenState extends State<ReportScreen> {
       bottomNavigationBar: const AppBottomNav(currentIndex: 4),
     );
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MOOD CALENDAR
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Builds a map of date → mood int from the viewModel's checkin list.
+  /// Assumes each checkin exposes a [date] (DateTime) and [mood] (int 1-5).
+  /// Adjust field names if your model differs.
+  Map<DateTime, int> _buildDateMoodMap(ReportViewModel viewModel) {
+    final map = <DateTime, int>{};
+    for (final c in viewModel.checkins) {
+      if (c.userMood == null) continue;
+      // Normalise to midnight so comparisons are date-only
+      final d = DateTime(c.date.year, c.date.month, c.date.day);
+      map[d] = c.userMood!;
+    }
+    return map;
+  }
+
+  Widget _buildMoodCalendar(ReportViewModel viewModel) {
+    final isWeekly = viewModel.selectedView == 'weekly';
+    final moodMap = _buildDateMoodMap(viewModel);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _primary.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: _primarySoft,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'MOOD CALENDAR',
+                  style: TextStyle(
+                    color: _primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                isWeekly ? _weekRangeLabel() : _monthLabel(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Day-of-week header
+          _buildDayHeaders(),
+          const SizedBox(height: 6),
+
+          // Calendar grid
+          isWeekly
+              ? _buildWeekRow(moodMap)
+              : _buildMonthGrid(moodMap),
+
+          const SizedBox(height: 14),
+          // Legend
+          _buildCalendarLegend(),
+        ],
+      ),
+    );
+  }
+
+  /// S M T W T F S column headers
+  Widget _buildDayHeaders() {
+    const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    return Row(
+      children: labels
+          .map(
+            (l) => Expanded(
+              child: Center(
+                child: Text(
+                  l,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: _muted,
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 7-cell strip for the current week (Sun → Sat)
+  Widget _buildWeekRow(Map<DateTime, int> moodMap) {
+    final now = DateTime.now();
+    // Sunday of the current week
+    final weekStart =
+        DateTime(now.year, now.month, now.day - now.weekday % 7);
+    final days = List.generate(
+      7,
+      (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
+    );
+
+    return Row(
+      children: days.map((day) {
+        final mood = moodMap[day];
+        final isToday = _isSameDay(day, now);
+        return Expanded(child: _buildCalendarCell(day, mood, isToday));
+      }).toList(),
+    );
+  }
+
+  /// Full month grid with leading blank cells to align day-of-week
+  Widget _buildMonthGrid(Map<DateTime, int> moodMap) {
+    final now = DateTime.now();
+    final firstOfMonth = DateTime(now.year, now.month, 1);
+    final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
+
+    // 0 = Sunday offset
+    final startOffset = firstOfMonth.weekday % 7;
+    final totalCells = startOffset + daysInMonth;
+    final rowCount = (totalCells / 7).ceil();
+
+    return Column(
+      children: List.generate(rowCount, (row) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: List.generate(7, (col) {
+              final cellIndex = row * 7 + col;
+              final dayNumber = cellIndex - startOffset + 1;
+
+              if (dayNumber < 1 || dayNumber > daysInMonth) {
+                return const Expanded(child: SizedBox(height: 36));
+              }
+
+              final day = DateTime(now.year, now.month, dayNumber);
+              final mood = moodMap[day];
+              final isToday = _isSameDay(day, now);
+              return Expanded(
+                  child: _buildCalendarCell(day, mood, isToday));
+            }),
+          ),
+        );
+      }),
+    );
+  }
+
+  /// Individual day cell: coloured circle with emoji if mood logged,
+  /// day-number outline if not.
+  Widget _buildCalendarCell(DateTime day, int? mood, bool isToday) {
+    final hasMood = mood != null;
+    final cellColor =
+        hasMood ? _getMoodColor(mood).withOpacity(0.82) : Colors.transparent;
+    final borderColor = isToday
+        ? _primary
+        : (hasMood ? Colors.transparent : _muted.withOpacity(0.25));
+
+    return Padding(
+      padding: const EdgeInsets.all(2.5),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Container(
+          decoration: BoxDecoration(
+            color: cellColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor, width: isToday ? 2 : 1),
+          ),
+          alignment: Alignment.center,
+          child: hasMood
+              ? Text(
+                  _moodEmoji(mood),
+                  style: const TextStyle(fontSize: 12),
+                )
+              : Text(
+                  '${day.day}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight:
+                        isToday ? FontWeight.w800 : FontWeight.w500,
+                    color: isToday ? _primary : _muted.withOpacity(0.55),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  /// Colour/emoji legend at the bottom of the calendar
+  Widget _buildCalendarLegend() {
+    const entries = [
+      (5, 'Great'),
+      (4, 'Good'),
+      (3, 'Neutral'),
+      (2, 'Low'),
+      (1, 'Very Low'),
+    ];
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 6,
+      children: entries.map((e) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: _getMoodColor(e.$1),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              e.$2,
+              style: const TextStyle(
+                fontSize: 10,
+                color: _muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  // ─── Calendar helpers ────────────────────────────────────────────────────
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _weekRangeLabel() {
+    final now = DateTime.now();
+    final start =
+        DateTime(now.year, now.month, now.day - now.weekday % 7);
+    final end = DateTime(start.year, start.month, start.day + 6);
+    return '${_shortDate(start)} – ${_shortDate(end)}';
+  }
+
+  String _monthLabel() {
+    final now = DateTime.now();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return '${months[now.month - 1]} ${now.year}';
+  }
+
+  String _shortDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[d.month - 1]} ${d.day}';
+  }
+
+  /// Local emoji helper so calendar cells don't need a viewModel reference.
+  String _moodEmoji(int mood) {
+    switch (mood) {
+      case 1: return '😞';
+      case 2: return '😕';
+      case 3: return '😐';
+      case 4: return '🙂';
+      case 5: return '😄';
+      default: return '❓';
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // EXISTING WIDGETS (unchanged)
+  // ─────────────────────────────────────────────────────────────────────────
 
   Widget _buildHeroSummary(ReportViewModel viewModel) {
     final expected = viewModel.selectedView == 'weekly' ? 7 : 30;
@@ -830,35 +1126,23 @@ class _ReportScreenState extends State<ReportScreen> {
 
   String _getMoodLabel(int mood) {
     switch (mood) {
-      case 1:
-        return 'Very Low';
-      case 2:
-        return 'Low';
-      case 3:
-        return 'Neutral';
-      case 4:
-        return 'Good';
-      case 5:
-        return 'Great';
-      default:
-        return 'Unknown';
+      case 1: return 'Very Low';
+      case 2: return 'Low';
+      case 3: return 'Neutral';
+      case 4: return 'Good';
+      case 5: return 'Great';
+      default: return 'Unknown';
     }
   }
 
   Color _getMoodColor(int mood) {
     switch (mood) {
-      case 1:
-        return AppColors.red;
-      case 2:
-        return AppColors.orange;
-      case 3:
-        return AppColors.yellow;
-      case 4:
-        return AppColors.blue;
-      case 5:
-        return AppColors.darkGreen;
-      default:
-        return _muted;
+      case 1: return AppColors.red;
+      case 2: return AppColors.orange;
+      case 3: return AppColors.yellow;
+      case 4: return AppColors.blue;
+      case 5: return AppColors.darkGreen;
+      default: return _muted;
     }
   }
 }

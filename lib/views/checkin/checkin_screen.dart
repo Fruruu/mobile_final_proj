@@ -31,31 +31,31 @@ class _CheckinScreenState extends State<CheckinScreen> {
   static const List<_MoodOption> _moodOptions = [
     _MoodOption(
       mood: 5,
-      label: 'Radiant',
+      label: 'Very Happy',
       asset: 'assets/logos/very-happy-face.svg',
       cardColor: Color(0xFFC3FFA7),
     ),
     _MoodOption(
       mood: 4,
-      label: 'Calm',
+      label: 'Happy',
       asset: 'assets/logos/happy-face.svg',
       cardColor: Color(0xFF4EC1F5),
     ),
     _MoodOption(
       mood: 3,
-      label: 'Steady',
+      label: 'Neutral',
       asset: 'assets/logos/neutral-face.svg',
       cardColor: Color(0xFFFF6169),
     ),
     _MoodOption(
       mood: 2,
-      label: 'Heavy',
+      label: 'Sad',
       asset: 'assets/logos/sad-face.svg',
       cardColor: Color(0xFFFFDE71),
     ),
     _MoodOption(
       mood: 1,
-      label: 'Fragile',
+      label: 'Very Sad',
       asset: 'assets/logos/very-sad-face.svg',
       cardColor: Color(0xFFFF9800),
     ),
@@ -92,7 +92,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
     }
 
     return SizedBox(
-      height: 188,
+      height: 210, // increased to accommodate label
       child: PageView.builder(
         controller: _carouselController,
         clipBehavior: Clip.none,
@@ -142,26 +142,49 @@ class _CheckinScreenState extends State<CheckinScreen> {
                   curve: Curves.easeOut,
                 );
               },
-              child: selected
-                  ? card
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: ShaderMask(
-                        blendMode: BlendMode.dstIn,
-                        shaderCallback: (bounds) => const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          stops: [0.0, 0.18, 0.82, 1.0],
-                          colors: [
-                            Colors.transparent,
-                            Colors.white,
-                            Colors.white,
-                            Colors.transparent,
-                          ],
-                        ).createShader(bounds),
-                        child: card,
-                      ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Expanded(
+                    child: selected
+                        ? card
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: ShaderMask(
+                              blendMode: BlendMode.dstIn,
+                              shaderCallback: (bounds) => const LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                stops: [0.0, 0.18, 0.82, 1.0],
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.white,
+                                  Colors.white,
+                                  Colors.transparent,
+                                ],
+                              ).createShader(bounds),
+                              child: card,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    style: GoogleFonts.inter(
+                      fontSize: selected ? 13 : 11,
+                      fontWeight:
+                          selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected
+                          ? AppColors.black
+                          : AppColors.black.withOpacity(0.4),
                     ),
+                    child: Text(
+                      option.label,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
