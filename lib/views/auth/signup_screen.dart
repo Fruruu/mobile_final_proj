@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/auth_view_model.dart';
 import '../../theme/app_colors.dart';
@@ -147,9 +148,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     _buildInputField(
                       controller: _phoneController,
-                      hintText: '+1 555 123 4567',
+                      hintText: '+63 9XX XXX XXXX',
                       keyboardType: TextInputType.phone,
                       obscureText: false,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                        LengthLimitingTextInputFormatter(13),
+                      ],
                     ),
                     const SizedBox(height: 14),
 
@@ -346,11 +351,13 @@ class _SignupScreenState extends State<SignupScreen> {
     required TextInputType keyboardType,
     required bool obscureText,
     Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(color: Color(0xFFACADAD)),

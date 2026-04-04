@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_profile.dart';
@@ -52,6 +53,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
+    final normalizedPhone = _normalizePhilippinePhone(_phoneController.text);
+    if (_phoneController.text.trim().isNotEmpty && normalizedPhone == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a valid PH mobile number (e.g. +639171234567).'),
+          backgroundColor: AppColors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -59,7 +71,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       
       // Update profile with new data
       await profileVm.profileService.upsertProfile(
-        _buildProfileFromForm(user.id, user.email ?? ''),
+        _buildProfileFromForm(user.id, user.email ?? '', normalizedPhone),
       );
 
       // Reload profile
@@ -89,15 +101,44 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
   }
 
-  dynamic _buildProfileFromForm(String userId, String email) {
+  dynamic _buildProfileFromForm(
+    String userId,
+    String email,
+    String? normalizedPhone,
+  ) {
     // Return a UserProfile object for upserting
     return UserProfile(
       id: userId,
       email: email,
       name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
       birthday: _birthday,
-      phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+      phone: normalizedPhone,
     );
+  }
+
+  String? _normalizePhilippinePhone(String rawPhone) {
+    if (rawPhone.trim().isEmpty) {
+      return null;
+    }
+
+    final digitsOnly = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    String? normalized;
+
+    if (digitsOnly.length == 12 && digitsOnly.startsWith('63')) {
+      normalized = '+$digitsOnly';
+    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('09')) {
+      normalized = '+63${digitsOnly.substring(1)}';
+    } else if (digitsOnly.length == 10 && digitsOnly.startsWith('9')) {
+      normalized = '+63$digitsOnly';
+    }
+
+    if (normalized == null) {
+      return null;
+    }
+
+    return RegExp(r'^\+639\d{9}$').hasMatch(normalized)
+        ? normalized
+        : null;
   }
 
   @override
@@ -189,8 +230,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                  LengthLimitingTextInputFormatter(13),
+                ],
                 decoration: InputDecoration(
-                  hintText: '+1 555 123 4567',
+                  hintText: '+63 9XX XXX XXXX',
                   hintStyle: const TextStyle(color: Color(0xFFD0CCCC)),
                   filled: true,
                   fillColor: const Color(0xFFFAF8F8),
