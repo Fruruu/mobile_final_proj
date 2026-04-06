@@ -25,12 +25,15 @@ class _ReportScreenState extends State<ReportScreen> {
 
   bool _loaded = false;
 
+  /// The date that drives the calendar view.
+  /// For monthly view  → we use its year + month.
+  /// For weekly view   → we find the Sunday of the week containing this date.
+  DateTime _focusedDate = DateTime.now();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_loaded) {
-      return;
-    }
+    if (_loaded) return;
 
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     if (userId.isNotEmpty) {
@@ -39,6 +42,60 @@ class _ReportScreenState extends State<ReportScreen> {
       });
       _loaded = true;
     }
+  }
+
+  // ─── Calendar navigation ─────────────────────────────────────────────────
+
+  void _goToPrevious(String selectedView) {
+    setState(() {
+      if (selectedView == 'weekly') {
+        _focusedDate = _focusedDate.subtract(const Duration(days: 7));
+      } else {
+        final m = _focusedDate.month == 1 ? 12 : _focusedDate.month - 1;
+        final y =
+            _focusedDate.month == 1 ? _focusedDate.year - 1 : _focusedDate.year;
+        _focusedDate = DateTime(y, m, 1);
+      }
+    });
+  }
+
+  void _goToNext(String selectedView) {
+    final now = DateTime.now();
+    setState(() {
+      if (selectedView == 'weekly') {
+        final next = _focusedDate.add(const Duration(days: 7));
+        if (next.isBefore(now) || _isSameDay(next, now)) {
+          _focusedDate = next;
+        }
+      } else {
+        final m = _focusedDate.month == 12 ? 1 : _focusedDate.month + 1;
+        final y = _focusedDate.month == 12
+            ? _focusedDate.year + 1
+            : _focusedDate.year;
+        final candidate = DateTime(y, m, 1);
+        if (!candidate.isAfter(DateTime(now.year, now.month, 1))) {
+          _focusedDate = candidate;
+        }
+      }
+    });
+  }
+
+  bool _canGoNext(String selectedView) {
+    final now = DateTime.now();
+    if (selectedView == 'weekly') {
+      // The Sunday of the current real week
+      final todaySunday =
+          DateTime(now.year, now.month, now.day - now.weekday % 7);
+      final focusedSunday = _weekStart(_focusedDate);
+      return focusedSunday.isBefore(todaySunday);
+    } else {
+      return _focusedDate.year < now.year ||
+          (_focusedDate.year == now.year && _focusedDate.month < now.month);
+    }
+  }
+
+  DateTime _weekStart(DateTime ref) {
+    return DateTime(ref.year, ref.month, ref.day - ref.weekday % 7);
   }
 
   @override
@@ -116,7 +173,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     const SizedBox(height: 10),
                     _buildViewToggle(viewModel),
                     const SizedBox(height: 10),
-                    _buildMoodCalendar(viewModel), // ← NEW
+                    _buildMoodCalendar(viewModel),
                     const SizedBox(height: 10),
                     _buildStatsCards(viewModel),
                     const SizedBox(height: 10),
@@ -143,14 +200,10 @@ class _ReportScreenState extends State<ReportScreen> {
   // MOOD CALENDAR
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// Builds a map of date → mood int from the viewModel's checkin list.
-  /// Assumes each checkin exposes a [date] (DateTime) and [mood] (int 1-5).
-  /// Adjust field names if your model differs.
   Map<DateTime, int> _buildDateMoodMap(ReportViewModel viewModel) {
     final map = <DateTime, int>{};
     for (final c in viewModel.checkins) {
       if (c.userMood == null) continue;
-      // Normalise to midnight so comparisons are date-only
       final d = DateTime(c.date.year, c.date.month, c.date.day);
       map[d] = c.userMood!;
     }
@@ -160,6 +213,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildMoodCalendar(ReportViewModel viewModel) {
     final isWeekly = viewModel.selectedView == 'weekly';
     final moodMap = _buildDateMoodMap(viewModel);
+    final canNext = _canGoNext(viewModel.selectedView);
 
     return Container(
       width: double.infinity,
@@ -178,7 +232,7 @@ class _ReportScreenState extends State<ReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
+          // ── Header row with navigation ──────────────────────────────────
           Row(
             children: [
               Container(
@@ -199,36 +253,50 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
               ),
               const Spacer(),
+              // Previous arrow
+              _NavArrow(
+                icon: Icons.chevron_left_rounded,
+                onTap: () => _goToPrevious(viewModel.selectedView),
+              ),
+              const SizedBox(width: 4),
+              // Period label
               Text(
-                isWeekly ? _weekRangeLabel() : _monthLabel(),
+                isWeekly
+                    ? _weekRangeLabel(_focusedDate)
+                    : _monthLabel(_focusedDate),
                 style: const TextStyle(
                   fontSize: 12,
                   color: _muted,
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              const SizedBox(width: 4),
+              // Next arrow (disabled when already at current period)
+              _NavArrow(
+                icon: Icons.chevron_right_rounded,
+                onTap: canNext
+                    ? () => _goToNext(viewModel.selectedView)
+                    : null,
+                disabled: !canNext,
+              ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // Day-of-week header
           _buildDayHeaders(),
           const SizedBox(height: 6),
 
-          // Calendar grid
           isWeekly
-              ? _buildWeekRow(moodMap)
-              : _buildMonthGrid(moodMap),
+              ? _buildWeekRow(moodMap, _focusedDate)
+              : _buildMonthGrid(moodMap, _focusedDate),
 
           const SizedBox(height: 14),
-          // Legend
           _buildCalendarLegend(),
         ],
       ),
     );
   }
 
-  /// S M T W T F S column headers
   Widget _buildDayHeaders() {
     const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     return Row(
@@ -251,36 +319,34 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  /// 7-cell strip for the current week (Sun → Sat)
-  Widget _buildWeekRow(Map<DateTime, int> moodMap) {
-    final now = DateTime.now();
-    // Sunday of the current week
-    final weekStart =
-        DateTime(now.year, now.month, now.day - now.weekday % 7);
+  /// 7-cell strip for the week containing [ref] (Sun → Sat)
+  Widget _buildWeekRow(Map<DateTime, int> moodMap, DateTime ref) {
+    final weekStart = _weekStart(ref);
     final days = List.generate(
       7,
       (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
     );
+    final now = DateTime.now();
 
     return Row(
       children: days.map((day) {
         final mood = moodMap[day];
         final isToday = _isSameDay(day, now);
-        return Expanded(child: _buildCalendarCell(day, mood, isToday));
+        final isFuture = day.isAfter(now);
+        return Expanded(
+            child: _buildCalendarCell(day, mood, isToday, isFuture));
       }).toList(),
     );
   }
 
-  /// Full month grid with leading blank cells to align day-of-week
-  Widget _buildMonthGrid(Map<DateTime, int> moodMap) {
-    final now = DateTime.now();
-    final firstOfMonth = DateTime(now.year, now.month, 1);
-    final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
-
-    // 0 = Sunday offset
+  /// Full month grid for the month of [ref]
+  Widget _buildMonthGrid(Map<DateTime, int> moodMap, DateTime ref) {
+    final firstOfMonth = DateTime(ref.year, ref.month, 1);
+    final daysInMonth = DateUtils.getDaysInMonth(ref.year, ref.month);
     final startOffset = firstOfMonth.weekday % 7;
     final totalCells = startOffset + daysInMonth;
     final rowCount = (totalCells / 7).ceil();
+    final now = DateTime.now();
 
     return Column(
       children: List.generate(rowCount, (row) {
@@ -295,11 +361,12 @@ class _ReportScreenState extends State<ReportScreen> {
                 return const Expanded(child: SizedBox(height: 36));
               }
 
-              final day = DateTime(now.year, now.month, dayNumber);
+              final day = DateTime(ref.year, ref.month, dayNumber);
               final mood = moodMap[day];
               final isToday = _isSameDay(day, now);
+              final isFuture = day.isAfter(now);
               return Expanded(
-                  child: _buildCalendarCell(day, mood, isToday));
+                  child: _buildCalendarCell(day, mood, isToday, isFuture));
             }),
           ),
         );
@@ -307,47 +374,51 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  /// Individual day cell: coloured circle with emoji if mood logged,
-  /// day-number outline if not.
-  Widget _buildCalendarCell(DateTime day, int? mood, bool isToday) {
-    final hasMood = mood != null;
-    final cellColor =
-        hasMood ? _getMoodColor(mood).withOpacity(0.82) : Colors.transparent;
+  /// Individual day cell.
+  /// Future dates are rendered dimmed with no interaction.
+  Widget _buildCalendarCell(
+      DateTime day, int? mood, bool isToday, bool isFuture) {
+    final hasMood = mood != null && !isFuture;
+    final cellColor = hasMood
+        ? _getMoodColor(mood).withOpacity(0.82)
+        : Colors.transparent;
     final borderColor = isToday
         ? _primary
         : (hasMood ? Colors.transparent : _muted.withOpacity(0.25));
 
     return Padding(
       padding: const EdgeInsets.all(2.5),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Container(
-          decoration: BoxDecoration(
-            color: cellColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: borderColor, width: isToday ? 2 : 1),
-          ),
-          alignment: Alignment.center,
-          child: hasMood
-              ? Text(
-                  _moodEmoji(mood),
-                  style: const TextStyle(fontSize: 12),
-                )
-              : Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight:
-                        isToday ? FontWeight.w800 : FontWeight.w500,
-                    color: isToday ? _primary : _muted.withOpacity(0.55),
+      child: Opacity(
+        opacity: isFuture ? 0.28 : 1.0,
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: cellColor,
+              shape: BoxShape.circle,
+              border: Border.all(color: borderColor, width: isToday ? 2 : 1),
+            ),
+            alignment: Alignment.center,
+            child: hasMood
+                ? Text(
+                    _moodEmoji(mood),
+                    style: const TextStyle(fontSize: 12),
+                  )
+                : Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight:
+                          isToday ? FontWeight.w800 : FontWeight.w500,
+                      color: isToday ? _primary : _muted.withOpacity(0.55),
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );
   }
 
-  /// Colour/emoji legend at the bottom of the calendar
   Widget _buildCalendarLegend() {
     const entries = [
       (5, 'Great'),
@@ -392,21 +463,18 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  String _weekRangeLabel() {
-    final now = DateTime.now();
-    final start =
-        DateTime(now.year, now.month, now.day - now.weekday % 7);
+  String _weekRangeLabel(DateTime ref) {
+    final start = _weekStart(ref);
     final end = DateTime(start.year, start.month, start.day + 6);
     return '${_shortDate(start)} – ${_shortDate(end)}';
   }
 
-  String _monthLabel() {
-    final now = DateTime.now();
+  String _monthLabel(DateTime ref) {
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
     ];
-    return '${months[now.month - 1]} ${now.year}';
+    return '${months[ref.month - 1]} ${ref.year}';
   }
 
   String _shortDate(DateTime d) {
@@ -417,7 +485,6 @@ class _ReportScreenState extends State<ReportScreen> {
     return '${months[d.month - 1]} ${d.day}';
   }
 
-  /// Local emoji helper so calendar cells don't need a viewModel reference.
   String _moodEmoji(int mood) {
     switch (mood) {
       case 1: return '😞';
@@ -575,7 +642,11 @@ class _ReportScreenState extends State<ReportScreen> {
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () => viewModel.switchView('weekly'),
+              onTap: () {
+                viewModel.switchView('weekly');
+                // Reset to current week when switching views
+                setState(() => _focusedDate = DateTime.now());
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -601,7 +672,11 @@ class _ReportScreenState extends State<ReportScreen> {
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () => viewModel.switchView('monthly'),
+              onTap: () {
+                viewModel.switchView('monthly');
+                // Reset to current month when switching views
+                setState(() => _focusedDate = DateTime.now());
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -888,9 +963,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Widget _buildMoodDistribution(ReportViewModel viewModel) {
     final moodFreq = viewModel.moodFrequency;
-    if (moodFreq.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (moodFreq.isEmpty) return const SizedBox.shrink();
 
     final sortedMoods = moodFreq.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
@@ -1019,7 +1092,8 @@ class _ReportScreenState extends State<ReportScreen> {
             data: viewModel.insightText.isNotEmpty
                 ? viewModel.insightText
                 : 'No insight available yet.',
-            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+            styleSheet:
+                MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
               p: const TextStyle(
                 fontSize: 13,
                 height: 1.45,
@@ -1097,28 +1171,21 @@ class _ReportScreenState extends State<ReportScreen> {
     if (viewModel.checkins.isEmpty) {
       return 'Start with your first check-in to unlock personalized patterns.';
     }
-
     if (viewModel.averageSleep < 7) {
       return 'Your mood trends improve with rest. Try aiming for at least 7 hours tonight.';
     }
-
     if (viewModel.averageWater < 6) {
       return 'Hydration is a growth lever. Push your daily water target slightly higher.';
     }
-
     final minExercise = viewModel.selectedView == 'weekly' ? 3 : 12;
     if (viewModel.exerciseCount < minExercise) {
       return 'Movement can lift your mood. Add short exercise sessions this period.';
     }
-
     return 'Great balance this period. Keep your routine steady and protect your streak.';
   }
 
   MapEntry<int, int>? _getDominantMoodEntry(ReportViewModel viewModel) {
-    if (viewModel.moodFrequency.isEmpty) {
-      return null;
-    }
-
+    if (viewModel.moodFrequency.isEmpty) return null;
     final entries = viewModel.moodFrequency.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     return entries.first;
@@ -1144,5 +1211,46 @@ class _ReportScreenState extends State<ReportScreen> {
       case 5: return AppColors.darkGreen;
       default: return _muted;
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Small reusable nav arrow button
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _NavArrow extends StatelessWidget {
+  const _NavArrow({
+    required this.icon,
+    required this.onTap,
+    this.disabled = false,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: disabled
+              ? const Color(0xFFF4EFF1)
+              : const Color(0x26FF6169), // _primarySoft
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 18,
+          color: disabled
+              ? const Color(0xFF8F8B8C) // _muted
+              : AppColors.primaryPink,
+        ),
+      ),
+    );
   }
 }
