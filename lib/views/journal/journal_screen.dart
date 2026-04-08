@@ -501,6 +501,8 @@ class _JournalScreenState extends State<JournalScreen>
   Widget build(BuildContext context) {
     final vm = Provider.of<JournalViewModel>(context);
     final user = Supabase.instance.client.auth.currentUser;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final paperCardHeight = screenHeight < 700 ? 360.0 : 430.0;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -578,61 +580,65 @@ class _JournalScreenState extends State<JournalScreen>
                           ),
                         ),
                       ),
-                      Stack(
-                        children: [
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                painter: _RuledLinesPainter(),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 16,
-                            right: 16,
-                            child: Opacity(
-                              opacity: 0.08,
-                              child: Transform.rotate(
-                                angle: -0.15,
-                                child: Icon(
-                                  Icons.edit_rounded,
-                                  size: 60,
-                                  color: _primary,
+                      SizedBox(
+                        height: paperCardHeight,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  painter: _RuledLinesPainter(),
                                 ),
                               ),
                             ),
-                          ),
-                          TextField(
-                            controller: _journalController,
-                            focusNode: _focusNode,
-                            minLines: 14,
-                            maxLines: null,
-                            onChanged: (value) {
-                              vm.setJournalText(value);
-                              setState(() {});
-                            },
-                            decoration: InputDecoration(
-                              hintText:
-                                  'Write freely — this is your space...',
-                              hintStyle: TextStyle(
-                                color: _primary.withOpacity(0.45),
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w400,
-                                fontStyle: FontStyle.italic,
-                                height: 1.65,
+                            Positioned(
+                              bottom: 16,
+                              right: 16,
+                              child: Opacity(
+                                opacity: 0.08,
+                                child: Transform.rotate(
+                                  angle: -0.15,
+                                  child: Icon(
+                                    Icons.edit_rounded,
+                                    size: 60,
+                                    color: _primary,
+                                  ),
+                                ),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.fromLTRB(
-                                  24, 24, 24, 24),
                             ),
-                            style: const TextStyle(
-                              color: AppColors.black,
-                              fontSize: 15.5,
-                              height: 1.65,
-                              letterSpacing: 0.1,
+                            TextField(
+                              controller: _journalController,
+                              focusNode: _focusNode,
+                              minLines: null,
+                              maxLines: null,
+                              expands: true,
+                              onChanged: (value) {
+                                vm.setJournalText(value);
+                                setState(() {});
+                              },
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Write freely — this is your space...',
+                                hintStyle: TextStyle(
+                                  color: _primary.withOpacity(0.45),
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.italic,
+                                  height: 1.65,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                    24, 24, 24, 24),
+                              ),
+                              style: const TextStyle(
+                                color: AppColors.black,
+                                fontSize: 15.5,
+                                height: 1.65,
+                                letterSpacing: 0.1,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       // Bottom bar (only when typing)
                       if (_journalController.text.isNotEmpty)

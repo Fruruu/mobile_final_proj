@@ -168,6 +168,7 @@ class JournalViewModel extends ChangeNotifier {
       } catch (e) {
         topPattern = null;
       }
+
       final result = await _claudeService
           .analyzeJournal(
         journalText: _journalText,
@@ -180,7 +181,7 @@ class JournalViewModel extends ChangeNotifier {
       );
 
       // STEP 9 - Save AI results back to Supabase
-      _aiMood = result['mood']!;
+      _aiMood = '';
       _aiInsight = result['insight']!;
 
       final journals = await _journalService
@@ -192,7 +193,7 @@ class JournalViewModel extends ChangeNotifier {
           userId: userId,
           date: savedEntry.date,
           journalText: _journalText,
-          aiMood: _aiMood,
+          aiMood: null,
           aiInsight: _aiInsight,
         );
         await _journalService.updateJournal(updatedEntry);

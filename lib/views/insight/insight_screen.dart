@@ -26,6 +26,7 @@ class _InsightScreenState extends State<InsightScreen> {
   late String _aiInsight;
   late String _source;
   late String _journalText;
+  Map<String, dynamic>? _checkinData;
   bool _initialized = false;
 
   @override
@@ -41,6 +42,12 @@ class _InsightScreenState extends State<InsightScreen> {
       _aiInsight = args?['aiInsight'] ?? '';
       _source = args?['source'] ?? 'checkin';
       _journalText = args?['journalText'] ?? '';
+        final rawCheckinData = args?['checkinData'];
+        _checkinData = rawCheckinData is Map<String, dynamic>
+          ? rawCheckinData
+          : (rawCheckinData is Map
+            ? Map<String, dynamic>.from(rawCheckinData)
+            : null);
 
 
       // Load today's check-in data
@@ -57,6 +64,16 @@ class _InsightScreenState extends State<InsightScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<InsightViewModel>(context);
+    final fallbackMood = _checkinData?['user_mood'] as int?;
+    final fallbackSleep = (_checkinData?['sleep_hours'] as num?)?.toDouble();
+    final fallbackExercised = _checkinData?['exercised'] as bool?;
+    final fallbackWater = _checkinData?['water_glasses'] as int?;
+    final hasFallbackCheckin = _checkinData != null;
+
+    final summaryMood = vm.todayCheckin?.userMood ?? fallbackMood;
+    final summarySleep = vm.todayCheckin?.sleepHours ?? fallbackSleep;
+    final summaryExercised = vm.todayCheckin?.exercised ?? fallbackExercised;
+    final summaryWater = vm.todayCheckin?.waterGlasses ?? fallbackWater;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -103,66 +120,68 @@ class _InsightScreenState extends State<InsightScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // MOOD DETECTED SECTION
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _primary.withOpacity(0.12),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
+                if (_source != 'journal') ...[
+                  // MOOD DETECTED SECTION
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFFFFF), Color(0xFFFFF4F7)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primary.withOpacity(0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
                         ),
-                        decoration: BoxDecoration(
-                          color: _primarySoft,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: const Text(
-                          'MOOD DETECTED',
-                          style: TextStyle(
-                            color: _primary,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1,
-                            fontSize: 11,
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _primarySoft,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'MOOD DETECTED',
+                            style: TextStyle(
+                              color: _primary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                              fontSize: 11,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      SvgPicture.asset(
-                        _getMoodAssetForAiMood(_aiMood),
-                        width: 86,
-                        height: 86,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _aiMood.isNotEmpty ? _aiMood : 'Analyzing...',
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: _text,
+                        const SizedBox(height: 14),
+                        SvgPicture.asset(
+                          _getMoodAssetForAiMood(_aiMood),
+                          width: 86,
+                          height: 86,
+                          fit: BoxFit.contain,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          _aiMood.isNotEmpty ? _aiMood : 'Analyzing...',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: _text,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 22),
+                  const SizedBox(height: 22),
+                ],
 
                 // JOURNAL TEXT FIRST (if source is journal)
                 if (_source == 'journal') ...[
@@ -176,21 +195,65 @@ class _InsightScreenState extends State<InsightScreen> {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0x55FFDE71),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      _journalText.isNotEmpty
-                          ? _journalText
-                          : 'No journal text available',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.amber.shade900,
-                        fontStyle: FontStyle.italic,
-                        height: 1.5,
+                      color: const Color(0xFFFFFBF5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFE8E3DC).withOpacity(0.75),
+                        width: 1.2,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFE8E3DC).withOpacity(0.75),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: AppColors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: CustomPaint(
+                              painter: _PaperLinesPainter(),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 2,
+                              margin: const EdgeInsets.only(top: 4),
+                              constraints: const BoxConstraints(minHeight: 90),
+                              decoration: BoxDecoration(
+                                color: _primary.withOpacity(0.42),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _journalText.isNotEmpty
+                                    ? _journalText
+                                    : 'No journal text available',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: _text,
+                                  fontStyle: FontStyle.italic,
+                                  height: 1.6,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -247,7 +310,8 @@ class _InsightScreenState extends State<InsightScreen> {
                 const SizedBox(height: 22),
 
                 // TODAY'S CHECK-IN SUMMARY
-                if (vm.todayCheckin != null) ...[
+                if (_source != 'journal' &&
+                    (vm.todayCheckin != null || hasFallbackCheckin)) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -274,12 +338,12 @@ class _InsightScreenState extends State<InsightScreen> {
                         child: Row(
                           children: [
                             Text(
-                              _getMoodEmojiFromNumber(vm.todayCheckin!.userMood),
+                              _getMoodEmojiFromNumber(summaryMood),
                               style: const TextStyle(fontSize: 13),
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _getMoodScoreText(vm.todayCheckin!.userMood),
+                              _getMoodScoreText(summaryMood),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -301,27 +365,27 @@ class _InsightScreenState extends State<InsightScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildMoodCheckinItem(vm.todayCheckin!.userMood),
+                        _buildMoodCheckinItem(summaryMood),
                         const SizedBox(height: 12),
                         _buildCheckinItem(
                           'Sleep',
-                          '${vm.todayCheckin!.sleepHours?.toStringAsFixed(1) ?? 0} hours',
+                          '${(summarySleep ?? 0).toStringAsFixed(1)} hours',
                         ),
                         const SizedBox(height: 12),
                         _buildCheckinItem(
                           'Exercise',
-                          vm.todayCheckin!.exercised ? 'Yes' : 'No',
+                          (summaryExercised ?? false) ? 'Yes' : 'No',
                         ),
                         const SizedBox(height: 12),
                         _buildCheckinItem(
                           'Water',
-                          '${vm.todayCheckin!.waterGlasses ?? 0} glasses',
+                          '${summaryWater ?? 0} glasses',
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 22),
-                ] else if (vm.isLoading)
+                ] else if (_source != 'journal' && vm.isLoading)
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Center(
@@ -332,7 +396,7 @@ class _InsightScreenState extends State<InsightScreen> {
                       ),
                     ),
                   )
-                else if (vm.errorMessage.isNotEmpty)
+                else if (_source != 'journal' && vm.errorMessage.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
@@ -539,4 +603,21 @@ class _InsightScreenState extends State<InsightScreen> {
 
     return 'assets/logos/neutral-face.svg';
   }
+}
+
+class _PaperLinesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0x1A8F8B8C)
+      ..strokeWidth = 1;
+
+    const spacing = 20.0;
+    for (double y = 14; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
