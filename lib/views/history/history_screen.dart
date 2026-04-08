@@ -82,8 +82,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.yellow.withOpacity(0.30),
-                    blurRadius: 60,
+                    color: AppColors.yellow.withOpacity(0.12),
+                    blurRadius: 20,
                     spreadRadius: 10,
                     offset: const Offset(0, 20),
                   ),
@@ -202,15 +202,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Entries',
-          style: GoogleFonts.inter(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: _text,
-          ),
-        ),
-        const SizedBox(height: 4),
         const Text(
           'Choose an item to view full insight details.',
           style: TextStyle(
@@ -313,6 +304,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         aiMood: checkin.aiMood,
         aiInsight: checkin.aiInsight,
         source: 'history',
+        checkinData: {
+          'user_mood': checkin.userMood,
+          'sleep_hours': checkin.sleepHours,
+          'exercised': checkin.exercised,
+          'water_glasses': checkin.waterGlasses,
+        },
       ),
       onMenuSelected: (value) {
         if (value == 'insight') {
@@ -320,6 +317,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             aiMood: checkin.aiMood,
             aiInsight: checkin.aiInsight,
             source: 'history',
+            checkinData: {
+              'user_mood': checkin.userMood,
+              'sleep_hours': checkin.sleepHours,
+              'exercised': checkin.exercised,
+              'water_glasses': checkin.waterGlasses,
+            },
           );
           return;
         }
@@ -586,19 +589,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     required String? aiInsight,
     required String source,
     String? journalText,
+    Map<String, dynamic>? checkinData,
   }) {
     Navigator.pushNamed(
       context,
       '/insight',
       arguments: {
-        'aiMood': (aiMood == null || aiMood.isEmpty)
-            ? 'No mood detected'
-            : aiMood,
+        'aiMood': source == 'journal'
+            ? ''
+            : ((aiMood == null || aiMood.isEmpty)
+                ? 'No mood detected'
+                : aiMood),
         'aiInsight': (aiInsight == null || aiInsight.isEmpty)
             ? 'No insight available'
             : aiInsight,
         'source': source,
         'journalText': journalText ?? '',
+        'checkinData': checkinData,
       },
     );
   }

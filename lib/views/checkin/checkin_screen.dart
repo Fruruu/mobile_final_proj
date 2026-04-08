@@ -416,6 +416,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                                     ),
                                     ElevatedButton(
                                       onPressed: () async {
+                                        final submittedMood = vm.selectedMood;
+                                        final submittedSleep = vm.sleepHours;
+                                        final submittedExercised = vm.exercised;
+                                        final submittedWater = vm.waterGlasses;
                                         Navigator.pop(context);
                                         await vm.submitCheckin(user.id);
                                         if (vm.success && context.mounted) {
@@ -426,6 +430,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
                                               'aiMood': vm.aiMood,
                                               'aiInsight': vm.aiInsight,
                                               'source': 'checkin',
+                                              'checkinData': {
+                                                'user_mood': submittedMood,
+                                                'sleep_hours': submittedSleep,
+                                                'exercised': submittedExercised,
+                                                'water_glasses': submittedWater,
+                                              },
                                             },
                                           );
                                         }
@@ -441,6 +451,10 @@ class _CheckinScreenState extends State<CheckinScreen> {
                               );
                             } else if (!exists && context.mounted) {
                               // No existing check-in, proceed normally
+                              final submittedMood = vm.selectedMood;
+                              final submittedSleep = vm.sleepHours;
+                              final submittedExercised = vm.exercised;
+                              final submittedWater = vm.waterGlasses;
                               await vm.submitCheckin(user.id);
                               if (vm.success && context.mounted) {
                                 Navigator.pushNamed(
@@ -450,6 +464,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
                                     'aiMood': vm.aiMood,
                                     'aiInsight': vm.aiInsight,
                                     'source': 'checkin',
+                                    'checkinData': {
+                                      'user_mood': submittedMood,
+                                      'sleep_hours': submittedSleep,
+                                      'exercised': submittedExercised,
+                                      'water_glasses': submittedWater,
+                                    },
                                   },
                                 );
                               }

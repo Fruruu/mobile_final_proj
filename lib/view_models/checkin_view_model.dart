@@ -106,6 +106,7 @@ class CheckinViewModel extends ChangeNotifier {
         journalText: '',
         todayCheckin: todayCheckin,
         weekSummary: weekSummary,
+        enforcedMood: _mapMoodLabel(_selectedMood),
       );
 
       // STEP 6 - Save AI results back to Supabase
@@ -207,5 +208,21 @@ class CheckinViewModel extends ChangeNotifier {
     _sleepHours = 7;
     _exercised = false;
     _waterGlasses = 0;
+  }
+
+  String _mapMoodLabel(int mood) {
+    switch (mood) {
+      case 5:
+      case 4:
+        return 'Happy';
+      case 3:
+        return 'Neutral';
+      case 2:
+        return 'Sad';
+      case 1:
+        return 'Anxious';
+      default:
+        return 'Neutral';
+    }
   }
 }

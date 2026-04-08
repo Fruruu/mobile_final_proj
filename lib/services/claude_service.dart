@@ -15,6 +15,7 @@ class ClaudeService {
     int? age,
     String? topPattern,
     int? streakCount,
+    String? enforcedMood,
   }) async {
 
     // Different prompt based on sa  whether journal was written or not
@@ -60,7 +61,11 @@ class ClaudeService {
 
       final data = jsonDecode(response.body);
       final text = data['content'][0]['text'];
-      return _parseResponse(text);
+      final parsed = _parseResponse(text);
+      if (enforcedMood != null && enforcedMood.isNotEmpty) {
+        parsed['mood'] = enforcedMood;
+      }
+      return parsed;
 
     } catch (e) {
       return {
