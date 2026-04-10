@@ -391,84 +391,105 @@ class _CheckinScreenState extends State<CheckinScreen> {
                     ),
                   ),
 
-                ElevatedButton(
-                  onPressed: vm.isLoading
-                      ? null
-                      : () async {
-                          if (user != null) {
-                            // Check if today's check-in already exists
-                            final exists = await vm.todayCheckinExists(user.id);
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: vm.isLoading
+                        ? null
+                        : () async {
+                            if (user != null) {
+                              // Check if today's check-in already exists
+                              final exists = await vm.todayCheckinExists(user.id);
 
-                            if (exists && context.mounted) {
-                              // Show confirmation dialog
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Update Check-in?'),
-                                  content: const Text(
-                                    'You already checked in today. '
-                                    'Would you like to update it?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
+                              if (exists && context.mounted) {
+                                // Show confirmation dialog
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Update Check-in?'),
+                                    content: const Text(
+                                      'You already checked in today. '
+                                      'Would you like to update it?',
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        await _submitAndNavigateToInsight(
-                                          vm,
-                                          user.id,
-                                          closeDialogFirst: true,
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: _primary,
-                                        foregroundColor: AppColors.white,
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancel'),
                                       ),
-                                      child: const Text('Update'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else if (!exists && context.mounted) {
-                              // No existing check-in, proceed normally
-                              await _submitAndNavigateToInsight(vm, user.id);
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          await _submitAndNavigateToInsight(
+                                            vm,
+                                            user.id,
+                                            closeDialogFirst: true,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: _primary,
+                                          foregroundColor: AppColors.white,
+                                        ),
+                                        child: const Text('Update'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (!exists && context.mounted) {
+                                // No existing check-in, proceed normally
+                                await _submitAndNavigateToInsight(vm, user.id);
+                              }
                             }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    elevation: 8,
-                    shadowColor: _primary.withOpacity(0.3),
-                    backgroundColor: _primary,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
+                          },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 8,
+                      shadowColor: _primary.withOpacity(0.3),
+                      backgroundColor: _primary,
+                      foregroundColor: AppColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
-                  ),
-                  child: vm.isLoading
-                      ? const Text(
-                          'Saving...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Complete Check-in',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                    child: vm.isLoading
+                        ? const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.white,
+                                  ),
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.done_all),
-                          ],
-                        ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Saving...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Complete Check-in',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.done_all),
+                            ],
+                          ),
+                  ),
                 ),
               ],
             ),
