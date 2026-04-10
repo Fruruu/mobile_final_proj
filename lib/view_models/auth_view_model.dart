@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../models/user_profile.dart';
+import '../utils/philippine_phone_utils.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -27,7 +28,7 @@ class AuthViewModel extends ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
 
-    final normalizedPhone = _normalizePhilippinePhone(phone);
+    final normalizedPhone = PhilippinePhoneUtils.normalizeMobile(phone);
     if ((phone ?? '').trim().isNotEmpty && normalizedPhone == null) {
       _errorMessage = 'Enter a valid PH mobile number (e.g. +639171234567).';
       _isLoading = false;
@@ -113,28 +114,4 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? _normalizePhilippinePhone(String? rawPhone) {
-    if (rawPhone == null || rawPhone.trim().isEmpty) {
-      return null;
-    }
-
-    final digitsOnly = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
-    String? normalized;
-
-    if (digitsOnly.length == 12 && digitsOnly.startsWith('63')) {
-      normalized = '+$digitsOnly';
-    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('09')) {
-      normalized = '+63${digitsOnly.substring(1)}';
-    } else if (digitsOnly.length == 10 && digitsOnly.startsWith('9')) {
-      normalized = '+63$digitsOnly';
-    }
-
-    if (normalized == null) {
-      return null;
-    }
-
-    return RegExp(r'^\+639\d{9}$').hasMatch(normalized)
-        ? normalized
-        : null;
-  }
 }

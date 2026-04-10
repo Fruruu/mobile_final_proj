@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'paper_painter.dart';
 import '../../view_models/journal_view_model.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/frosted_app_bar.dart';
@@ -208,158 +209,6 @@ class _JournalScreenState extends State<JournalScreen>
       ],
     );
   }
-
-  Widget _buildPaperCard() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: _paperBg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: _isFocused
-              ? _primary.withOpacity(0.3)
-              : _paperBorder.withOpacity(0.6),
-          width: _isFocused ? 1.5 : 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _isFocused
-                ? _primary.withOpacity(0.08)
-                : const Color(0xFFE8E3DC).withOpacity(0.8),
-            blurRadius: _isFocused ? 28 : 20,
-            spreadRadius: 0,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Ruled lines decoration strip
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: Container(
-              height: 4,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    _primary.withOpacity(0.0),
-                    _primary.withOpacity(0.35),
-                    _primary.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Stack(
-            children: [
-              // Subtle ruled lines background
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(painter: _RuledLinesPainter()),
-                ),
-              ),
-              // Pen icon watermark
-              Positioned(
-                bottom: 20,
-                right: 20,
-                child: Opacity(
-                  opacity: 0.1,
-                  child: Transform.rotate(
-                    angle: -0.15,
-                    child: Icon(
-                      Icons.edit_rounded,
-                      size: 52,
-                      color: _primary,
-                    ),
-                  ),
-                ),
-              ),
-              TextField(
-                controller: _journalController,
-                focusNode: _focusNode,
-                minLines: 14,
-                maxLines: null,
-                onChanged: (value) {
-                  vm_setJournalText(value); // called via build context below
-                  setState(() {});
-                },
-                decoration: InputDecoration(
-                  hintText: 'Write freely — this is your space...',
-                  hintStyle: TextStyle(
-                    color: _primary.withOpacity(0.5),
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.italic,
-                    height: 1.6,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                ),
-                style: const TextStyle(
-                  color: AppColors.black,
-                  fontSize: 15.5,
-                  height: 1.65,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-          // Bottom char count bar
-          if (_journalController.text.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: _primary.withOpacity(0.04),
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(24)),
-                border: Border(
-                  top: BorderSide(
-                    color: _paperBorder.withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 13,
-                    color: _primary.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'AI will analyze your entry',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _muted.withOpacity(0.8),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${_journalController.text.length} chars',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _primary.withOpacity(0.7),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // Placeholder — actual call uses vm from Provider
-  void vm_setJournalText(String value) {}
 
   Widget _buildSaveButton(JournalViewModel vm, String? userId) {
     final bool disabled = vm.isLoading || _journalController.text.isEmpty;
@@ -587,7 +436,11 @@ class _JournalScreenState extends State<JournalScreen>
                             Positioned.fill(
                               child: IgnorePointer(
                                 child: CustomPaint(
-                                  painter: _RuledLinesPainter(),
+                                  painter: PaperPainter(
+                                    paperColor: _paperBg,
+                                    lineColor: _paperBorder,
+                                    shadowColor: _primary.withOpacity(0.3),
+                                  ),
                                 ),
                               ),
                             ),
@@ -739,30 +592,4 @@ class _JournalScreenState extends State<JournalScreen>
       bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
-}
-
-/// Paints subtle horizontal ruled lines inside the paper card
-class _RuledLinesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFE8E3DC).withOpacity(0.35)
-      ..strokeWidth = 0.8;
-
-    const lineSpacing = 32.0;
-    const startY = 56.0;
-    var y = startY;
-
-    while (y < size.height - 20) {
-      canvas.drawLine(
-        Offset(20, y),
-        Offset(size.width - 20, y),
-        paint,
-      );
-      y += lineSpacing;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

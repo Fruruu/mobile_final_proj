@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_profile.dart';
 import '../../theme/app_colors.dart';
 import '../../view_models/profile_view_model.dart';
+import '../../utils/philippine_phone_utils.dart';
 import '../../widgets/frosted_app_bar.dart';
 
 class ProfileEditScreen extends StatefulWidget {
@@ -53,7 +54,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
-    final normalizedPhone = _normalizePhilippinePhone(_phoneController.text);
+    final normalizedPhone = PhilippinePhoneUtils.normalizeMobile(
+      _phoneController.text,
+    );
     if (_phoneController.text.trim().isNotEmpty && normalizedPhone == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -116,35 +119,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
   }
 
-  String? _normalizePhilippinePhone(String rawPhone) {
-    if (rawPhone.trim().isEmpty) {
-      return null;
-    }
-
-    final digitsOnly = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
-    String? normalized;
-
-    if (digitsOnly.length == 12 && digitsOnly.startsWith('63')) {
-      normalized = '+$digitsOnly';
-    } else if (digitsOnly.length == 11 && digitsOnly.startsWith('09')) {
-      normalized = '+63${digitsOnly.substring(1)}';
-    } else if (digitsOnly.length == 10 && digitsOnly.startsWith('9')) {
-      normalized = '+63$digitsOnly';
-    }
-
-    if (normalized == null) {
-      return null;
-    }
-
-    return RegExp(r'^\+639\d{9}$').hasMatch(normalized)
-        ? normalized
-        : null;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final profileVm = Provider.of<ProfileViewModel>(context);
-
     return Scaffold(
       backgroundColor: _bg,
       extendBodyBehindAppBar: true,

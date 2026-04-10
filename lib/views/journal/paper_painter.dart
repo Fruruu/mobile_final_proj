@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_colors.dart';
 
 class PaperPainter extends CustomPainter {
   final bool showLines;
@@ -20,7 +19,6 @@ class PaperPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint();
 
-    // 1. Base paper color with subtle grain gradient
     final grainShader = LinearGradient(
       colors: [
         paperColor,
@@ -38,7 +36,7 @@ class PaperPainter extends CustomPainter {
       paint,
     );
 
-    // 2. Irregular border (hand-torn effect)
+    // border
     final path = Path();
     path.addRRect(RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -51,7 +49,7 @@ class PaperPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(path, paint);
 
-    // 3. Faint horizontal lines for notebook paper
+    // lines for nb
     if (showLines) {
       paint
         ..color = lineColor.withOpacity(0.4)
@@ -63,7 +61,7 @@ class PaperPainter extends CustomPainter {
       }
     }
 
-    // 4. Folded bottom-right corner
+    //
     if (showFold) {
       // Fold shadow triangle
       final foldPath = Path()
@@ -94,7 +92,7 @@ class PaperPainter extends CustomPainter {
       );
     }
 
-    // 5. Subtle inner highlight and drop shadow overlay
+    // inner highlight and drop shadow overlay
     final highlightGradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,

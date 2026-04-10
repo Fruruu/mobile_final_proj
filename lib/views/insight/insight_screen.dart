@@ -20,7 +20,6 @@ class _InsightScreenState extends State<InsightScreen> {
   static const Color _primary = AppColors.primaryPink;
   static const Color _primarySoft = Color(0x33FF6169);
   static const Color _text = AppColors.black;
-  static const Color _muted = AppColors.black;
 
   late String _aiMood;
   late String _aiInsight;

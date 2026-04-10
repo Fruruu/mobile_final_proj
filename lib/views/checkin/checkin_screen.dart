@@ -416,29 +416,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
                                     ),
                                     ElevatedButton(
                                       onPressed: () async {
-                                        final submittedMood = vm.selectedMood;
-                                        final submittedSleep = vm.sleepHours;
-                                        final submittedExercised = vm.exercised;
-                                        final submittedWater = vm.waterGlasses;
-                                        Navigator.pop(context);
-                                        await vm.submitCheckin(user.id);
-                                        if (vm.success && context.mounted) {
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/insight',
-                                            arguments: {
-                                              'aiMood': vm.aiMood,
-                                              'aiInsight': vm.aiInsight,
-                                              'source': 'checkin',
-                                              'checkinData': {
-                                                'user_mood': submittedMood,
-                                                'sleep_hours': submittedSleep,
-                                                'exercised': submittedExercised,
-                                                'water_glasses': submittedWater,
-                                              },
-                                            },
-                                          );
-                                        }
+                                        await _submitAndNavigateToInsight(
+                                          vm,
+                                          user.id,
+                                          closeDialogFirst: true,
+                                        );
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: _primary,
@@ -451,28 +433,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
                               );
                             } else if (!exists && context.mounted) {
                               // No existing check-in, proceed normally
-                              final submittedMood = vm.selectedMood;
-                              final submittedSleep = vm.sleepHours;
-                              final submittedExercised = vm.exercised;
-                              final submittedWater = vm.waterGlasses;
-                              await vm.submitCheckin(user.id);
-                              if (vm.success && context.mounted) {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/insight',
-                                  arguments: {
-                                    'aiMood': vm.aiMood,
-                                    'aiInsight': vm.aiInsight,
-                                    'source': 'checkin',
-                                    'checkinData': {
-                                      'user_mood': submittedMood,
-                                      'sleep_hours': submittedSleep,
-                                      'exercised': submittedExercised,
-                                      'water_glasses': submittedWater,
-                                    },
-                                  },
-                                );
-                              }
+                              await _submitAndNavigateToInsight(vm, user.id);
                             }
                           }
                         },
@@ -516,6 +477,42 @@ class _CheckinScreenState extends State<CheckinScreen> {
       ),
       bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
+  }
+
+  Map<String, dynamic> _buildCheckinData(CheckinViewModel vm) {
+    return {
+      'user_mood': vm.selectedMood,
+      'sleep_hours': vm.sleepHours,
+      'exercised': vm.exercised,
+      'water_glasses': vm.waterGlasses,
+    };
+  }
+
+  Future<void> _submitAndNavigateToInsight(
+    CheckinViewModel vm,
+    String userId, {
+    bool closeDialogFirst = false,
+  }) async {
+    final checkinData = _buildCheckinData(vm);
+
+    if (closeDialogFirst && context.mounted) {
+      Navigator.pop(context);
+    }
+
+    await vm.submitCheckin(userId);
+
+    if (vm.success && context.mounted) {
+      Navigator.pushNamed(
+        context,
+        '/insight',
+        arguments: {
+          'aiMood': vm.aiMood,
+          'aiInsight': vm.aiInsight,
+          'source': 'checkin',
+          'checkinData': checkinData,
+        },
+      );
+    }
   }
 
   Widget _glassCard({required Widget child}) {

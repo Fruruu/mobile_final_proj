@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -287,6 +286,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryViewModel vm,
     String userId,
   ) {
+    final checkinData = _buildCheckinData(checkin);
     final moodText =
         (checkin.aiMood != null && checkin.aiMood!.trim().isNotEmpty)
         ? checkin.aiMood!.trim()
@@ -304,12 +304,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         aiMood: checkin.aiMood,
         aiInsight: checkin.aiInsight,
         source: 'history',
-        checkinData: {
-          'user_mood': checkin.userMood,
-          'sleep_hours': checkin.sleepHours,
-          'exercised': checkin.exercised,
-          'water_glasses': checkin.waterGlasses,
-        },
+        checkinData: checkinData,
       ),
       onMenuSelected: (value) {
         if (value == 'insight') {
@@ -317,12 +312,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             aiMood: checkin.aiMood,
             aiInsight: checkin.aiInsight,
             source: 'history',
-            checkinData: {
-              'user_mood': checkin.userMood,
-              'sleep_hours': checkin.sleepHours,
-              'exercised': checkin.exercised,
-              'water_glasses': checkin.waterGlasses,
-            },
+            checkinData: checkinData,
           );
           return;
         }
@@ -332,6 +322,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
         }
       },
     );
+  }
+
+  Map<String, dynamic> _buildCheckinData(DailyCheckin checkin) {
+    return {
+      'user_mood': checkin.userMood,
+      'sleep_hours': checkin.sleepHours,
+      'exercised': checkin.exercised,
+      'water_glasses': checkin.waterGlasses,
+    };
   }
 
   String _getMoodAssetPath({

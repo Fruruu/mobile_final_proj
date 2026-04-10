@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   static const Color _bg = AppColors.white;
   static const Color _primary = AppColors.primaryPink;
-  static const Color _text = AppColors.black;
   static const Color _muted = Color(0xFF5B5658);
 
   @override

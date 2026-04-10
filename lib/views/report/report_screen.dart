@@ -44,7 +44,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  // ─── Calendar navigation ─────────────────────────────────────────────────
+  // Calendar navigation
 
   void _goToPrevious(String selectedView) {
     setState(() {
@@ -175,6 +175,8 @@ class _ReportScreenState extends State<ReportScreen> {
                     const SizedBox(height: 10),
                     _buildMoodCalendar(viewModel),
                     const SizedBox(height: 10),
+                    _buildMoodTrendLine(viewModel),
+                    const SizedBox(height: 10),
                     _buildStatsCards(viewModel),
                     const SizedBox(height: 10),
                     _buildCorrelationSection(viewModel),
@@ -196,9 +198,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
   // MOOD CALENDAR
-  // ─────────────────────────────────────────────────────────────────────────
 
   Map<DateTime, int> _buildDateMoodMap(ReportViewModel viewModel) {
     final map = <DateTime, int>{};
@@ -213,6 +213,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildMoodCalendar(ReportViewModel viewModel) {
     final isWeekly = viewModel.selectedView == 'weekly';
     final moodMap = _buildDateMoodMap(viewModel);
+    final checkinMap = _buildDateCheckinMap(viewModel);
     final canNext = _canGoNext(viewModel.selectedView);
 
     return Container(
@@ -232,7 +233,7 @@ class _ReportScreenState extends State<ReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header row with navigation ──────────────────────────────────
+          // ── Header row with navigation
           Row(
             children: [
               Container(
@@ -287,14 +288,23 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 6),
 
           isWeekly
-              ? _buildWeekRow(moodMap, _focusedDate)
-              : _buildMonthGrid(moodMap, _focusedDate),
+              ? _buildWeekRow(moodMap, checkinMap, _focusedDate)
+              : _buildMonthGrid(moodMap, checkinMap, _focusedDate),
 
           const SizedBox(height: 14),
           _buildCalendarLegend(),
         ],
       ),
     );
+  }
+
+  Map<DateTime, dynamic> _buildDateCheckinMap(ReportViewModel viewModel) {
+    final map = <DateTime, dynamic>{};
+    for (final c in viewModel.checkins) {
+      final d = DateTime(c.date.year, c.date.month, c.date.day);
+      map[d] = c;
+    }
+    return map;
   }
 
   Widget _buildDayHeaders() {
@@ -319,8 +329,131 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
+  Widget _buildMoodTrendLine(ReportViewModel viewModel) {
+    final trendSeries = _buildMoodTrendSeries(viewModel);
+    final trackedPoints = trendSeries.values.where((v) => v != null).length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _primary.withOpacity(0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Mood Trend Line',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: _text,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${viewModel.selectedView == 'weekly' ? 'Last 7 days' : 'Last 30 days'} · $trackedPoints tracked day${trackedPoints == 1 ? '' : 's'}',
+            style: const TextStyle(
+              fontSize: 13,
+              color: _muted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 150,
+            child: _MoodTrendChart(
+              values: trendSeries.values,
+              lineColor: _primary,
+              gridColor: _muted.withOpacity(0.18),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                trendSeries.startLabel,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: _muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                trendSeries.middleLabel,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: _muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                trendSeries.endLabel,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: _muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  _TrendSeries _buildMoodTrendSeries(ReportViewModel viewModel) {
+    final now = DateTime.now();
+    final span = viewModel.selectedView == 'weekly' ? 7 : 30;
+    final start = DateTime(now.year, now.month, now.day - (span - 1));
+
+    final moodByDay = <DateTime, int>{};
+    for (final checkin in viewModel.checkins) {
+      if (checkin.userMood == null) continue;
+      final d = DateTime(
+        checkin.date.year,
+        checkin.date.month,
+        checkin.date.day,
+      );
+      moodByDay[d] = checkin.userMood!;
+    }
+
+    final values = <double?>[];
+    for (var i = 0; i < span; i++) {
+      final day = DateTime(start.year, start.month, start.day + i);
+      values.add(moodByDay[day]?.toDouble());
+    }
+
+    final middleDate = DateTime(
+      start.year,
+      start.month,
+      start.day + (span ~/ 2),
+    );
+    final endDate = DateTime(start.year, start.month, start.day + (span - 1));
+
+    return _TrendSeries(
+      values: values,
+      startLabel: _shortDate(start),
+      middleLabel: _shortDate(middleDate),
+      endLabel: _shortDate(endDate),
+    );
+  }
+
   /// 7-cell strip for the week containing [ref] (Sun → Sat)
-  Widget _buildWeekRow(Map<DateTime, int> moodMap, DateTime ref) {
+  Widget _buildWeekRow(
+    Map<DateTime, int> moodMap,
+    Map<DateTime, dynamic> checkinMap,
+    DateTime ref,
+  ) {
     final weekStart = _weekStart(ref);
     final days = List.generate(
       7,
@@ -331,16 +464,28 @@ class _ReportScreenState extends State<ReportScreen> {
     return Row(
       children: days.map((day) {
         final mood = moodMap[day];
+        final checkin = checkinMap[day];
         final isToday = _isSameDay(day, now);
         final isFuture = day.isAfter(now);
         return Expanded(
-            child: _buildCalendarCell(day, mood, isToday, isFuture));
+          child: _buildCalendarCell(
+            day,
+            mood,
+            isToday,
+            isFuture,
+            onTap: checkin == null ? null : () => _openInsightForCheckin(checkin),
+          ),
+        );
       }).toList(),
     );
   }
 
   /// Full month grid for the month of [ref]
-  Widget _buildMonthGrid(Map<DateTime, int> moodMap, DateTime ref) {
+  Widget _buildMonthGrid(
+    Map<DateTime, int> moodMap,
+    Map<DateTime, dynamic> checkinMap,
+    DateTime ref,
+  ) {
     final firstOfMonth = DateTime(ref.year, ref.month, 1);
     final daysInMonth = DateUtils.getDaysInMonth(ref.year, ref.month);
     final startOffset = firstOfMonth.weekday % 7;
@@ -363,10 +508,18 @@ class _ReportScreenState extends State<ReportScreen> {
 
               final day = DateTime(ref.year, ref.month, dayNumber);
               final mood = moodMap[day];
+              final checkin = checkinMap[day];
               final isToday = _isSameDay(day, now);
               final isFuture = day.isAfter(now);
               return Expanded(
-                  child: _buildCalendarCell(day, mood, isToday, isFuture));
+                child: _buildCalendarCell(
+                  day,
+                  mood,
+                  isToday,
+                  isFuture,
+                  onTap: checkin == null ? null : () => _openInsightForCheckin(checkin),
+                ),
+              );
             }),
           ),
         );
@@ -377,7 +530,12 @@ class _ReportScreenState extends State<ReportScreen> {
   /// Individual day cell.
   /// Future dates are rendered dimmed with no interaction.
   Widget _buildCalendarCell(
-      DateTime day, int? mood, bool isToday, bool isFuture) {
+    DateTime day,
+    int? mood,
+    bool isToday,
+    bool isFuture, {
+    VoidCallback? onTap,
+  }) {
     final hasMood = mood != null && !isFuture;
     final cellColor = hasMood
         ? _getMoodColor(mood).withOpacity(0.82)
@@ -385,6 +543,7 @@ class _ReportScreenState extends State<ReportScreen> {
     final borderColor = isToday
         ? _primary
         : (hasMood ? Colors.transparent : _muted.withOpacity(0.25));
+    final interactive = !isFuture && onTap != null;
 
     return Padding(
       padding: const EdgeInsets.all(2.5),
@@ -392,30 +551,56 @@ class _ReportScreenState extends State<ReportScreen> {
         opacity: isFuture ? 0.28 : 1.0,
         child: AspectRatio(
           aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: cellColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: isToday ? 2 : 1),
-            ),
-            alignment: Alignment.center,
-            child: hasMood
-                ? Text(
-                    _moodEmoji(mood),
-                    style: const TextStyle(fontSize: 12),
-                  )
-                : Text(
-                    '${day.day}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight:
-                          isToday ? FontWeight.w800 : FontWeight.w500,
-                      color: isToday ? _primary : _muted.withOpacity(0.55),
+          child: GestureDetector(
+            onTap: interactive ? onTap : null,
+            child: Container(
+              decoration: BoxDecoration(
+                color: cellColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: borderColor, width: isToday ? 2 : 1),
+              ),
+              alignment: Alignment.center,
+              child: hasMood
+                  ? Text(
+                      _moodEmoji(mood),
+                      style: const TextStyle(fontSize: 12),
+                    )
+                  : Text(
+                      '${day.day}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight:
+                            isToday ? FontWeight.w800 : FontWeight.w500,
+                        color: isToday ? _primary : _muted.withOpacity(0.55),
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  void _openInsightForCheckin(dynamic checkin) {
+    Navigator.pushNamed(
+      context,
+      '/insight',
+      arguments: {
+        'aiMood': (checkin.aiMood == null || checkin.aiMood.toString().isEmpty)
+            ? 'No mood detected'
+            : checkin.aiMood,
+        'aiInsight':
+            (checkin.aiInsight == null || checkin.aiInsight.toString().isEmpty)
+                ? 'No insight available'
+                : checkin.aiInsight,
+        'source': 'report',
+        'checkinData': {
+          'user_mood': checkin.userMood,
+          'sleep_hours': checkin.sleepHours,
+          'exercised': checkin.exercised,
+          'water_glasses': checkin.waterGlasses,
+        },
+      },
     );
   }
 
@@ -458,7 +643,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // ─── Calendar helpers ────────────────────────────────────────────────────
+  // Calendar helpers 
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -496,10 +681,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // EXISTING WIDGETS (unchanged)
-  // ─────────────────────────────────────────────────────────────────────────
-
+  // WIDGETS 
   Widget _buildHeroSummary(ReportViewModel viewModel) {
     final expected = viewModel.selectedView == 'weekly' ? 7 : 30;
     final tracked = viewModel.checkins.length;
@@ -1211,6 +1393,128 @@ class _ReportScreenState extends State<ReportScreen> {
       case 5: return AppColors.darkGreen;
       default: return _muted;
     }
+  }
+}
+
+class _TrendSeries {
+  const _TrendSeries({
+    required this.values,
+    required this.startLabel,
+    required this.middleLabel,
+    required this.endLabel,
+  });
+
+  final List<double?> values;
+  final String startLabel;
+  final String middleLabel;
+  final String endLabel;
+}
+
+class _MoodTrendChart extends StatelessWidget {
+  const _MoodTrendChart({
+    required this.values,
+    required this.lineColor,
+    required this.gridColor,
+  });
+
+  final List<double?> values;
+  final Color lineColor;
+  final Color gridColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _MoodTrendPainter(
+        values: values,
+        lineColor: lineColor,
+        gridColor: gridColor,
+      ),
+    );
+  }
+}
+
+class _MoodTrendPainter extends CustomPainter {
+  const _MoodTrendPainter({
+    required this.values,
+    required this.lineColor,
+    required this.gridColor,
+  });
+
+  final List<double?> values;
+  final Color lineColor;
+  final Color gridColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.isEmpty) {
+      return;
+    }
+
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..strokeWidth = 1;
+
+    final linePaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final pointPaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.fill;
+
+    final chartRect = Rect.fromLTWH(8, 8, size.width - 16, size.height - 16);
+
+    for (var i = 0; i < 5; i++) {
+      final t = i / 4;
+      final y = chartRect.bottom - (t * chartRect.height);
+      canvas.drawLine(
+        Offset(chartRect.left, y),
+        Offset(chartRect.right, y),
+        gridPaint,
+      );
+    }
+
+    final stepX = values.length <= 1 ? 0.0 : chartRect.width / (values.length - 1);
+
+    Offset? previous;
+    for (var i = 0; i < values.length; i++) {
+      final mood = values[i];
+      if (mood == null) {
+        previous = null;
+        continue;
+      }
+
+      final normalized = ((mood - 1) / 4).clamp(0.0, 1.0);
+      final point = Offset(
+        chartRect.left + (i * stepX),
+        chartRect.bottom - (normalized * chartRect.height),
+      );
+
+      if (previous != null) {
+        canvas.drawLine(previous, point, linePaint);
+      }
+
+      canvas.drawCircle(point, 3.4, pointPaint);
+      canvas.drawCircle(
+        point,
+        5.5,
+        Paint()
+          ..color = lineColor.withOpacity(0.2)
+          ..style = PaintingStyle.fill,
+      );
+
+      previous = point;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MoodTrendPainter oldDelegate) {
+    return oldDelegate.values != values ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.gridColor != gridColor;
   }
 }
 

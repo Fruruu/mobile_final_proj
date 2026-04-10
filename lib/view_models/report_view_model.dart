@@ -96,28 +96,6 @@ class ReportViewModel extends ChangeNotifier {
     }
   }
 
-  // Analyze data and generate insight
-  Future<void> _analyzeAndGenerateInsight(String userId) async {
-    final data = checkins;
-
-    if (data.isEmpty) {
-      _insightText = 'No data available for this period. Start tracking your mood!';
-      return;
-    }
-
-    // Calculate mood frequency
-    _calculateMoodFrequency(data);
-
-    // Calculate averages
-    _calculateAverages(data);
-
-    // Calculate habit-mood correlation
-    _calculateHabitCorrelation(data);
-
-    // Generate Claude insight
-    await _generateClaudeInsight(userId);
-  }
-
   Future<void> _refreshInsightIfNeededForView(String view, String userId) async {
     final previousView = _selectedView;
     _selectedView = view;

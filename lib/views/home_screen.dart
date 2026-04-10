@@ -395,8 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── Month grid ───────────────────────────────────────────────────────────
-
+  // Month grid 
   Widget _buildMonthGrid(Map<DateTime, int> moodMap) {
     final now = DateTime.now();
     final firstOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
@@ -441,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── Calendar card ────────────────────────────────────────────────────────
+  //Calendar card 
 
   Widget _buildHomeMoodCalendar(ReportViewModel reportVm) {
     final moodMap = _buildMoodMap(reportVm);
@@ -473,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header row ────────────────────────────────────────────────
+          //  Header row
           Row(
             children: [
               Container(
@@ -517,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ── Weekly / Monthly toggle ────────────────────────────────────
+          // Weekly / Monthly toggle
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -838,7 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── Unchanged widgets below ─────────────────────────────────────────────
+  // Widgets
 
   Widget _buildHeroSection({
     required BuildContext context,
@@ -1200,9 +1199,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Reusable nav arrow
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _NavArrow extends StatelessWidget {
   const _NavArrow({
