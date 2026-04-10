@@ -12,6 +12,7 @@ import 'view_models/history_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/report_view_model.dart';
 import 'view_models/profile_view_model.dart';
+import 'views/auth/startup_screen.dart';
 import 'views/auth/login_screen.dart';
 import 'views/home_screen.dart';
 import 'views/checkin/checkin_screen.dart';
@@ -51,6 +52,11 @@ class MyApp extends StatelessWidget {
 
   Route<dynamic> _buildRoute(RouteSettings settings) {
     switch (settings.name) {
+      case '/start':
+        return MaterialPageRoute(
+          builder: (_) => const StartupScreen(),
+          settings: settings,
+        );
       case '/login':
         return MaterialPageRoute(
           builder: (_) => const LoginScreen(),
@@ -78,7 +84,7 @@ class MyApp extends StatelessWidget {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
+          builder: (_) => const StartupScreen(),
           settings: settings,
         );
     }
@@ -108,7 +114,7 @@ class MyApp extends StatelessWidget {
         textTheme: interTextTheme,
         primaryTextTheme: GoogleFonts.interTextTheme(baseTheme.primaryTextTheme),
       ),
-      initialRoute: '/login',
+      initialRoute: '/start',
       onGenerateRoute: _buildRoute,
     );
   }
