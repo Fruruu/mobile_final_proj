@@ -327,30 +327,6 @@ class _InsightScreenState extends State<InsightScreen> {
                           horizontal: 10,
                           vertical: 6,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0x1AFF6169),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0x33FF6169),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              _getMoodEmojiFromNumber(summaryMood),
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _getMoodScoreText(summaryMood),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _primary,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),

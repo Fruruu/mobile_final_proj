@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -561,9 +562,11 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               alignment: Alignment.center,
               child: hasMood
-                  ? Text(
-                      _moodEmoji(mood),
-                      style: const TextStyle(fontSize: 12),
+                  ? SvgPicture.asset(
+                      _moodAssetPath(mood),
+                      width: 20,
+                      height: 20,
+                      fit: BoxFit.contain,
                     )
                   : Text(
                       '${day.day}',
@@ -670,14 +673,20 @@ class _ReportScreenState extends State<ReportScreen> {
     return '${months[d.month - 1]} ${d.day}';
   }
 
-  String _moodEmoji(int mood) {
+  String _moodAssetPath(int? mood) {
     switch (mood) {
-      case 1: return '😞';
-      case 2: return '😕';
-      case 3: return '😐';
-      case 4: return '🙂';
-      case 5: return '😄';
-      default: return '❓';
+      case 5:
+        return 'assets/logos/very-happy-face.svg';
+      case 4:
+        return 'assets/logos/happy-face.svg';
+      case 3:
+        return 'assets/logos/neutral-face.svg';
+      case 2:
+        return 'assets/logos/sad-face.svg';
+      case 1:
+        return 'assets/logos/very-sad-face.svg';
+      default:
+        return 'assets/logos/neutral-face.svg';
     }
   }
 
@@ -735,7 +744,9 @@ class _ReportScreenState extends State<ReportScreen> {
                   title: 'Dominant Mood',
                   value: moodEntry == null
                       ? 'N/A'
-                      : '${viewModel.getMoodEmoji(moodEntry.key)} ${_getMoodLabel(moodEntry.key)}',
+                      : _getMoodLabel(moodEntry.key),
+                  leadingSvgAsset:
+                      moodEntry == null ? null : _moodAssetPath(moodEntry.key),
                   color: AppColors.white.withOpacity(0.92),
                 ),
               ),
@@ -770,6 +781,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildSummaryMiniCard({
     required String title,
     required String value,
+    String? leadingSvgAsset,
     required Color color,
   }) {
     return Container(
@@ -790,16 +802,41 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ),
           const SizedBox(height: 3),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: _text,
+          if (leadingSvgAsset == null)
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: _text,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
+          else
+            Row(
+              children: [
+                SvgPicture.asset(
+                  leadingSvgAsset,
+                  width: 16,
+                  height: 16,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _text,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
         ],
       ),
     );

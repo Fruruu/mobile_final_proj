@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -143,14 +144,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${months[d.month - 1]} ${d.day}';
   }
 
-  String _moodEmoji(int mood) {
+  String _moodAssetPath(int? mood) {
     switch (mood) {
-      case 1: return '😞';
-      case 2: return '😕';
-      case 3: return '😐';
-      case 4: return '🙂';
-      case 5: return '😄';
-      default: return '❓';
+      case 5:
+        return 'assets/logos/very-happy-face.svg';
+      case 4:
+        return 'assets/logos/happy-face.svg';
+      case 3:
+        return 'assets/logos/neutral-face.svg';
+      case 2:
+        return 'assets/logos/sad-face.svg';
+      case 1:
+        return 'assets/logos/very-sad-face.svg';
+      default:
+        return 'assets/logos/neutral-face.svg';
     }
   }
 
@@ -222,8 +229,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 alignment: Alignment.center,
                 child: hasMood
-                    ? Text(_moodEmoji(mood),
-                        style: const TextStyle(fontSize: 15))
+                  ? SvgPicture.asset(
+                    _moodAssetPath(mood),
+                        width: 22,
+                        height: 22,
+                    fit: BoxFit.contain,
+                    )
                     : Text(
                         '${day.day}',
                         style: TextStyle(
@@ -302,10 +313,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          Text(
-            mood != null ? _moodEmoji(mood) : '📅',
-            style: const TextStyle(fontSize: 20),
-          ),
+          mood != null
+              ? SvgPicture.asset(
+                  _moodAssetPath(mood),
+                  width: 22,
+                  height: 22,
+                  fit: BoxFit.contain,
+                )
+              : const Text('📅', style: TextStyle(fontSize: 20)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -660,7 +675,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final hydrationCount = today?.waterGlasses ?? 0;
     final hydrationCompleted = hydrationCount >= 8;
     final streakCount = vm.streakCount;
-    final currentMood = vm.getMoodEmoji(today?.userMood);
+    final currentMoodAsset = _moodAssetPath(today?.userMood);
     final sleepHours = today?.sleepHours ?? 0;
     final exercised = today?.exercised ?? false;
 
@@ -677,7 +692,7 @@ class _HomeScreenState extends State<HomeScreen> {
               userName: userName,
               hydrationCount: hydrationCount,
               streakCount: streakCount,
-              moodEmoji: currentMood,
+                moodAssetPath: currentMoodAsset,
               hasCheckin: hasCheckin,
               topOffset: MediaQuery.of(context).padding.top +
                   FrostedAppBar.barHeight,
@@ -767,7 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 10),
                   _buildSnapshotCard(
                     hasCheckin: hasCheckin,
-                    moodEmoji: currentMood,
+                    moodAssetPath: currentMoodAsset,
                     sleepHours: sleepHours,
                     exercised: exercised,
                   ),
@@ -844,7 +859,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String userName,
     required int hydrationCount,
     required int streakCount,
-    required String moodEmoji,
+    required String moodAssetPath,
     required bool hasCheckin,
     required double topOffset,
   }) {
@@ -896,12 +911,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: '$streakCount',
                 label: 'Current Streak',
               ),
-              _buildHeroMetric(
-                emoji: moodEmoji,
-                value: '',
+              _buildMoodHeroMetric(
+                assetPath: moodAssetPath,
                 label: 'Current Mood',
-                isMood: true,
-                emojiSize: 26,
               ),
             ],
           ),
@@ -1021,9 +1033,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMoodHeroMetric({
+    required String assetPath,
+    required String label,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          SizedBox(
+            height: 44,
+            child: Center(
+              child: SvgPicture.asset(
+                assetPath,
+                width: 28,
+                height: 28,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _black,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSnapshotCard({
     required bool hasCheckin,
-    required String moodEmoji,
+    required String moodAssetPath,
     required double sleepHours,
     required bool exercised,
   }) {
@@ -1067,7 +1112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: _buildSnapshotMiniTile(
-                    icon: moodEmoji,
+                    svgAsset: moodAssetPath,
                     label: 'Mood',
                     value: 'Logged',
                     bg: _blue.withOpacity(0.22),
@@ -1148,7 +1193,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSnapshotMiniTile({
-    required String icon,
+    String? icon,
+    String? svgAsset,
     required String label,
     required String value,
     required Color bg,
@@ -1162,7 +1208,15 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 16)),
+          if (svgAsset != null)
+            SvgPicture.asset(
+              svgAsset,
+              width: 16,
+              height: 16,
+              fit: BoxFit.contain,
+            )
+          else
+            Text(icon ?? '', style: const TextStyle(fontSize: 16)),
           const SizedBox(height: 2),
           Text(
             label,
