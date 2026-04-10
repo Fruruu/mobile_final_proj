@@ -220,13 +220,14 @@ class _JournalScreenState extends State<JournalScreen>
         onPressed: disabled
             ? null
             : () async {
+                final submittedJournalText = _journalController.text.trim();
                 if (userId != null) {
                   final exists = await vm.todayJournalExists(userId);
                   if (exists && context.mounted) {
-                    _showUpdateDialog(vm);
+                    _showUpdateDialog(vm, submittedJournalText);
                   } else if (!exists && context.mounted) {
                     await vm.submitJournal(userId);
-                    _navigateToInsights(vm);
+                    _navigateToInsights(vm, submittedJournalText);
                   }
                 }
               },
@@ -294,7 +295,7 @@ class _JournalScreenState extends State<JournalScreen>
     );
   }
 
-  void _showUpdateDialog(JournalViewModel vm) {
+  void _showUpdateDialog(JournalViewModel vm, String submittedJournalText) {
     final user = Supabase.instance.client.auth.currentUser;
     showDialog(
       context: context,
@@ -315,7 +316,7 @@ class _JournalScreenState extends State<JournalScreen>
               Navigator.pop(context);
               if (user != null) {
                 await vm.submitJournal(user.id);
-                _navigateToInsights(vm);
+                _navigateToInsights(vm, submittedJournalText);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -332,7 +333,7 @@ class _JournalScreenState extends State<JournalScreen>
     );
   }
 
-  void _navigateToInsights(JournalViewModel vm) {
+  void _navigateToInsights(JournalViewModel vm, String submittedJournalText) {
     if (!vm.success || !context.mounted) return;
     _journalController.clear();
     Navigator.pushNamed(
@@ -342,6 +343,7 @@ class _JournalScreenState extends State<JournalScreen>
         'aiMood': vm.aiMood,
         'aiInsight': vm.aiInsight,
         'source': 'journal',
+        'journalText': submittedJournalText,
       },
     );
   }
