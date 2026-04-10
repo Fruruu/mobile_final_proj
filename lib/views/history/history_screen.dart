@@ -437,29 +437,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     color: _text,
                   ),
                 ),
-                if (journal.aiMood != null && journal.aiMood!.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryPink.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primaryPink.withOpacity(0.35),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      journal.aiMood!,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _text,
-                      ),
-                    ),
-                  ),
               ],
             ),
             subtitle: Column(
